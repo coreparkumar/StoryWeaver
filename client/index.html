@@ -30,8 +30,24 @@
   </head>
   <body>
     <div id="root"></div>
+    <!-- Farcaster Mini App SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@farcaster/miniapp-sdk/dist/index.min.js"></script>
     <script type="module" src="/src/main.tsx"></script>
     <!-- This is a replit script which adds a banner on the top of the page when opened in development mode outside the replit environment -->
     <script type="text/javascript" src="https://replit.com/public/js/replit-dev-banner.js"></script>
+    
+    <!-- Farcaster Mini App ready call -->
+    <script>
+      document.addEventListener('DOMContentLoaded', async () => {
+        if (window.frame && window.frame.sdk) {
+          try {
+            await window.frame.sdk.actions.ready();
+            console.log("Farcaster Mini App SDK initialized");
+          } catch (error) {
+            console.warn("Failed to initialize Farcaster SDK:", error);
+          }
+        }
+      });
+    </script>
   </body>
 </html>

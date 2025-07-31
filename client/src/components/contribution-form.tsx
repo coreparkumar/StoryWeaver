@@ -29,7 +29,7 @@ export default function ContributionForm({ story, currentUser, isOpen, onClose }
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/stories", story.id] });
+      queryClient.invalidateQueries({ queryKey: [`/api/stories/${story.id}${currentUser?.fid ? `?viewerFid=${currentUser.fid}` : ""}`] });
       setContent("");
       onClose();
       toast({

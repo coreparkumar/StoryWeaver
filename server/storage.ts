@@ -85,9 +85,7 @@ export class MemStorage implements IStorage {
       creatorFid: 1,
       title: "Digital Magic Adventures",
       initialContent: "Once upon a time, in a world where digital realms collided with ancient magic, there lived a young programmer named Zara who discovered that her late-night coding sessions were actually casting spells...",
-      castHash: "0x6932a9256f34e18892d498abb6d00ccf9f1c50d6",
-      likeCount: 42,
-      recastCount: 8
+      castHash: "0x6932a9256f34e18892d498abb6d00ccf9f1c50d6"
     });
 
     // Create sample segments
@@ -132,6 +130,7 @@ export class MemStorage implements IStorage {
     const user: User = { 
       ...insertUser, 
       id,
+      pfpUrl: insertUser.pfpUrl || null,
       followerCount: insertUser.followerCount || 0
     };
     this.users.set(id, user);
@@ -191,8 +190,9 @@ export class MemStorage implements IStorage {
     const story: Story = { 
       ...insertStory, 
       id,
-      likeCount: insertStory.likeCount || 0,
-      recastCount: insertStory.recastCount || 0,
+      castHash: insertStory.castHash || null,
+      likeCount: 0,
+      recastCount: 0,
       contributorCount: 1,
       createdAt: now,
       updatedAt: now
@@ -253,6 +253,7 @@ export class MemStorage implements IStorage {
     const like: StoryLike = { 
       ...insertLike, 
       id,
+      castHash: insertLike.castHash || null,
       createdAt: new Date()
     };
     

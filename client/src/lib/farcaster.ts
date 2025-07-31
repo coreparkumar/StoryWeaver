@@ -40,16 +40,39 @@ export const initializeFarcasterSDK = async (): Promise<FarcasterSDK> => {
     if (typeof window !== "undefined") {
       // Check if running in Farcaster Mini App environment
       const isInFarcaster = window.location.search.includes("miniApp=true") || 
-                           window.location.pathname.startsWith("/mini");
+                           window.location.pathname.startsWith("/mini") ||
+                           window.location.search.includes("fc_frame=");
       
       if (isInFarcaster) {
-        // In a real implementation, you would import the actual SDK:
-        // const { sdk } = await import('@farcaster/miniapp-sdk');
-        // return sdk;
-        
-        // For now, return mock SDK
-        console.log("Running in Farcaster environment - using mock SDK");
-        return createMockSDK();
+        try {
+          // Import the actual Farcaster Mini App SDK
+          const { sdk } = await import('@farcaster/miniapp-sdk');
+          console.log("Running in Farcaster environment - using real SDK");
+          
+          // Get the context (which is a promise in the real SDK)
+          const context = await sdk.context;
+          
+          return {
+            actions: {
+              ready: sdk.actions.ready
+            },
+            context: {
+              user: context.user ? {
+                fid: context.user.fid,
+                username: context.user.username || `user${context.user.fid}`,
+                displayName: context.user.displayName || context.user.username || `User ${context.user.fid}`,
+                pfpUrl: context.user.pfpUrl
+              } : undefined
+            },
+            on: (event: string, callback: (data: any) => void) => {
+              // Adapt the SDK's event system to our interface
+              sdk.on(event as any, callback);
+            }
+          };
+        } catch (sdkError) {
+          console.warn("Failed to load Farcaster SDK, using mock:", sdkError);
+          return createMockSDK();
+        }
       }
     }
     

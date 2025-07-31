@@ -1,26 +1,27 @@
 import { useQuery } from "@tanstack/react-query";
-import { useEffect } from "react";
-import type { StoryWithContributors } from "@shared/schema";
+import type { StoryWithContributors, Story } from "@shared/schema";
 
 export function useStory(storyId: string, viewerFid?: number) {
-  const query = useQuery<StoryWithContributors>({
-    queryKey: ["/api/stories", storyId, viewerFid],
-    enabled: !!storyId,
+  // For the sample story ID, get the first available story
+  const shouldGetFirstStory = storyId === "sample-story-id";
+  
+  const storiesQuery = useQuery<Story[]>({
+    queryKey: ["/api/stories"],
+    enabled: shouldGetFirstStory,
+  });
+
+  const actualStoryId = shouldGetFirstStory && storiesQuery.data?.length ? storiesQuery.data[0].id : storyId;
+
+  const storyQuery = useQuery<StoryWithContributors>({
+    queryKey: [`/api/stories/${actualStoryId}${viewerFid ? `?viewerFid=${viewerFid}` : ""}`],
+    enabled: !!actualStoryId && actualStoryId !== "sample-story-id",
     refetchInterval: 10000, // Refetch every 10 seconds for real-time updates
   });
 
-  // Handle the special case for the sample story
-  useEffect(() => {
-    if (storyId === "sample-story-id" && query.isError) {
-      // For demo purposes, use the first available story
-      console.log("Sample story ID used, this would fetch the main story in production");
-    }
-  }, [storyId, query.isError]);
-
   return {
-    story: query.data,
-    isLoading: query.isLoading,
-    error: query.error as Error | null,
-    refetch: query.refetch
+    story: storyQuery.data,
+    isLoading: shouldGetFirstStory ? (storiesQuery.isLoading || storyQuery.isLoading) : storyQuery.isLoading,
+    error: (storiesQuery.error || storyQuery.error) as Error | null,
+    refetch: storyQuery.refetch
   };
 }

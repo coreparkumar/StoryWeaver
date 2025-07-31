@@ -30,7 +30,7 @@ export default function StoryCard({ story, currentUser }: StoryCardProps) {
       return response.json();
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ["/api/stories", story.id] });
+      queryClient.invalidateQueries({ queryKey: [`/api/stories/${story.id}${currentUser?.fid ? `?viewerFid=${currentUser.fid}` : ""}`] });
       toast({
         title: data.liked ? "Story Liked!" : "Like Removed",
         description: data.liked 
@@ -63,16 +63,26 @@ export default function StoryCard({ story, currentUser }: StoryCardProps) {
     likeMutation.mutate();
   };
 
-  const formatTimeAgo = (date: Date) => {
-    const now = new Date();
-    const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60));
+  const formatTimeAgo = (dateInput: Date | string | null) => {
+    if (!dateInput) return 'Recently';
     
-    if (diffInMinutes < 60) {
-      return `${diffInMinutes}m ago`;
-    } else if (diffInMinutes < 1440) {
-      return `${Math.floor(diffInMinutes / 60)}h ago`;
-    } else {
-      return format(date, "MMM d");
+    try {
+      const date = typeof dateInput === 'string' ? new Date(dateInput) : dateInput;
+      if (isNaN(date.getTime())) return 'Recently';
+      
+      const now = new Date();
+      const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60));
+      
+      if (diffInMinutes < 60) {
+        return `${diffInMinutes}m ago`;
+      } else if (diffInMinutes < 1440) {
+        return `${Math.floor(diffInMinutes / 60)}h ago`;
+      } else {
+        return format(date, "MMM d");
+      }
+    } catch (error) {
+      console.warn('Error formatting date:', error);
+      return 'Recently';
     }
   };
 
@@ -93,7 +103,7 @@ export default function StoryCard({ story, currentUser }: StoryCardProps) {
                 <h3 className="font-semibold text-gray-900">{story.creator.displayName}</h3>
                 <span className="text-gray-500">@{story.creator.username}</span>
                 <span className="text-gray-400">·</span>
-                <time className="text-gray-500 text-sm">{formatTimeAgo(story.createdAt)}</time>
+                <time className="text-gray-500 text-sm">{story.createdAt ? formatTimeAgo(story.createdAt) : 'Recently'}</time>
               </div>
               <p className="text-gray-600 text-sm mt-1">Started a collaborative story</p>
             </div>
@@ -177,7 +187,7 @@ export default function StoryCard({ story, currentUser }: StoryCardProps) {
               </div>
               <div className="flex items-center space-x-1">
                 <Clock className="w-4 h-4" />
-                <span>Last updated {formatTimeAgo(story.updatedAt)}</span>
+                <span>Last updated {story.updatedAt ? formatTimeAgo(story.updatedAt) : 'recently'}</span>
               </div>
             </div>
           </div>
