@@ -5,7 +5,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Plus, Lightbulb, Shield, Lock, Clock } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-// import { useStoryLock } from "@/hooks/use-story-lock";
+import { useStoryLock } from "@/hooks/use-story-lock";
 import { apiRequest } from "@/lib/queryClient";
 import type { StoryWithContributors, User } from "@shared/schema";
 
@@ -20,9 +20,22 @@ export default function ContributionForm({ story, currentUser, isOpen, onClose }
   const [content, setContent] = useState("");
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { lockStatus, canWrite, isAcquiring, acquireLock, releaseLock } = useStoryLock(story.id);
 
   const submitMutation = useMutation({
     mutationFn: async (content: string) => {
+      // First acquire the lock if we don't have it
+      if (!canWrite) {
+        await new Promise((resolve, reject) => {
+          acquireLock();
+          // Wait a moment for lock acquisition
+          setTimeout(() => {
+            if (canWrite) resolve(true);
+            else reject(new Error("Could not acquire writing lock"));
+          }, 1000);
+        });
+      }
+      
       const response = await apiRequest("POST", `/api/stories/${story.id}/segments`, {
         authorFid: currentUser.fid,
         content
@@ -32,6 +45,7 @@ export default function ContributionForm({ story, currentUser, isOpen, onClose }
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [`/api/stories/${story.id}${currentUser?.fid ? `?viewerFid=${currentUser.fid}` : ""}`] });
       setContent("");
+      releaseLock(); // Release the lock after successful submission
       onClose();
       toast({
         title: "Contribution Added!",
@@ -61,6 +75,16 @@ export default function ContributionForm({ story, currentUser, isOpen, onClose }
       toast({
         title: "Too Long",
         description: "Please keep your contribution under 280 characters.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Check if someone else has the lock
+    if (lockStatus?.isLocked && !canWrite) {
+      toast({
+        title: "Story is Being Edited",
+        description: `${lockStatus.lockedBy} is currently writing. Please wait and try again.`,
         variant: "destructive"
       });
       return;

@@ -35,7 +35,7 @@ export interface IStorage {
 
   // Story segment operations
   getStorySegments(storyId: string): Promise<StorySegment[]>;
-  createStorySegment(segment: InsertStorySegment): Promise<StorySegment>;
+  createStorySegment(segment: InsertStorySegment & { orderIndex: number }): Promise<StorySegment>;
 
   // Story like operations
   getStoryLikes(storyId: string): Promise<StoryLike[]>;

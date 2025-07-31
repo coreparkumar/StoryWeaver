@@ -67,6 +67,7 @@ export const insertStorySchema = createInsertSchema(stories).omit({
 export const insertStorySegmentSchema = createInsertSchema(storySegments).omit({
   id: true,
   createdAt: true,
+  orderIndex: true, // This will be calculated server-side
 });
 
 export const insertStoryLikeSchema = createInsertSchema(storyLikes).omit({
