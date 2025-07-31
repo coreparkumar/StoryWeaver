@@ -7,7 +7,8 @@ import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
-import ContributionForm from "./contribution-form";
+import CommentForm from "./comment-form";
+import CommentsSection from "./comments-section";
 import ContributorsList from "./contributors-list";
 import type { StoryWithContributors, User } from "@shared/schema";
 
@@ -19,7 +20,8 @@ interface StoryCardProps {
 export default function StoryCard({ story, currentUser }: StoryCardProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [showContributionForm, setShowContributionForm] = useState(false);
+  const [showCommentForm, setShowCommentForm] = useState(false);
+  const isCreator = currentUser?.fid === story.creatorFid;
 
   const likeMutation = useMutation({
     mutationFn: async () => {
@@ -34,12 +36,12 @@ export default function StoryCard({ story, currentUser }: StoryCardProps) {
       toast({
         title: data.liked ? "Story Liked!" : "Like Removed",
         description: data.liked 
-          ? "You can now contribute to this story" 
-          : "You can no longer contribute to this story"
+          ? "You can now add your story part as a comment" 
+          : "You can no longer comment on this story"
       });
       
       if (data.liked) {
-        setShowContributionForm(true);
+        setShowCommentForm(true);
       }
     },
     onError: (error) => {
@@ -194,22 +196,21 @@ export default function StoryCard({ story, currentUser }: StoryCardProps) {
         </div>
       </Card>
 
-      {/* Contribution Area */}
+      {/* Comment Form Area */}
       {currentUser && (
         story.hasLiked ? (
-          <ContributionForm 
-            story={story} 
+          <CommentForm 
+            storyId={story.id} 
             currentUser={currentUser}
-            isOpen={showContributionForm}
-            onClose={() => setShowContributionForm(false)}
+            onSuccess={() => setShowCommentForm(false)}
           />
         ) : (
           <Card className="p-6 text-center bg-amber-50 border-amber-200">
             <div className="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <Heart className="w-8 h-8 text-amber-600" />
             </div>
-            <h3 className="text-lg font-semibold text-amber-800 mb-2">Like to Unlock Writing</h3>
-            <p className="text-amber-700 mb-4">Show your support for this story by liking it above. Only supporters can add to the collaborative narrative!</p>
+            <h3 className="text-lg font-semibold text-amber-800 mb-2">Like to Comment</h3>
+            <p className="text-amber-700 mb-4">Show your support for this story by liking it above. Only supporters can submit story parts for the creator to review!</p>
             <div className="text-sm text-amber-600">
               <i className="fas fa-info-circle mr-1"></i>
               This ensures quality contributions from engaged community members
@@ -217,6 +218,14 @@ export default function StoryCard({ story, currentUser }: StoryCardProps) {
           </Card>
         )
       )}
+
+      {/* Comments Section */}
+      <CommentsSection 
+        storyId={story.id}
+        comments={story.comments || []}
+        currentUser={currentUser}
+        isCreator={isCreator}
+      />
 
       {/* Contributors List */}
       <ContributorsList contributors={story.contributors} />
