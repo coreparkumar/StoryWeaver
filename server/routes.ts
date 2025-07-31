@@ -3,8 +3,11 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { insertStorySegmentSchema, insertStoryLikeSchema, insertUserSchema, insertStorySchema } from "@shared/schema";
 import { z } from "zod";
+import { generalRateLimit, storyCreationRateLimit, contributionRateLimit } from "./middleware/rate-limiter";
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Apply general rate limiting to all routes
+  app.use(generalRateLimit);
   
   // Get story with contributors
   app.get("/api/stories/:id", async (req, res) => {
@@ -36,7 +39,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Create new story (restricted)
-  app.post("/api/stories", async (req, res) => {
+  app.post("/api/stories", storyCreationRateLimit, async (req, res) => {
     try {
       const AUTHORIZED_FID = 977521; // Your Farcaster FID
       const { creatorFid } = req.body;
@@ -183,7 +186,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Add story segment (only if user has liked the story and has the lock)
-  app.post("/api/stories/:id/segments", async (req, res) => {
+  app.post("/api/stories/:id/segments", contributionRateLimit, async (req, res) => {
     try {
       const { id: storyId } = req.params;
       const segmentData = insertStorySegmentSchema.parse({

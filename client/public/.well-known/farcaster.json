@@ -1,13 +1,13 @@
 {
   "accountAssociation": {
-    "header": "eyJmaWQiOjEsInR5cGUiOiJjdXN0b2R5IiwiaXNzdWVyIjoiZXlKaGJHY2lPaUpGWkRJMU5URTVJaXdpZEhsd0lqb2lTa2RXVKJ9",
-    "payload": "eyJkb21haW4iOiJ5b3VyLWFwcC1uYW1lLnJlcGxpdC5hcHAifQ",
-    "signature": "MHgxMjM0NTY3ODkwYWJjZGVmMTIzNDU2Nzg5MGFiY2RlZjEyMzQ1Njc4OTBhYmNkZWYxMjM0NTY3ODkwYWJjZGVm"
+    "header": "eyJmaWQiOjk3NzUyMSwidHlwZSI6ImN1c3RvZHkiLCJrZXkiOiIweDEyMyJ9",
+    "payload": "eyJkb21haW4iOiJ5b3VyLWFwcC5yZXBsaXQuYXBwIn0",
+    "signature": "placeholder-signature-update-after-deployment"
   },
   "miniApp": {
     "name": "Story Weaver",
     "description": "Collaborative storytelling where users co-create dynamic narratives",
-    "icon": "https://your-app-name.replit.app/icon.png",
+    "icon": "https://your-app-name.replit.app/icon.svg",
     "url": "https://your-app-name.replit.app",
     "backgroundColor": "#8a63d2",
     "splashBackgroundColor": "#8a63d2"
