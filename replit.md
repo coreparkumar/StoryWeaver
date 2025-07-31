@@ -11,6 +11,8 @@ Story Weaver is a collaborative storytelling platform built as a Farcaster Mini 
 - **Full Data Persistence**: All user data, stories, story segments, and likes are now stored persistently in PostgreSQL
 - **Database Schema Deployed**: Created and deployed complete database schema with Drizzle ORM migrations
 - **Sample Data Initialization**: Automated sample data creation with collaborative story "Digital Magic Adventures"
+- **Writing Lock System**: Implemented 1-minute maximum writing locks to prevent editing conflicts between users
+- **Story Creation Restrictions**: Added warp-sharing requirement for new story creation to control content quality
 - **Production Ready**: Application now supports persistent data storage suitable for production deployment
 
 ## User Preferences

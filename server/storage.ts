@@ -7,14 +7,17 @@ import {
   type InsertStorySegment,
   type StoryLike,
   type InsertStoryLike,
+  type StoryLock,
+  type InsertStoryLock,
   type StoryWithContributors,
   users,
   stories,
   storySegments,
-  storyLikes
+  storyLikes,
+  storyLocks
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc, and, sql, count } from "drizzle-orm";
+import { eq, desc, and, sql, count, lt } from "drizzle-orm";
 
 export interface IStorage {
   // User operations
@@ -39,6 +42,12 @@ export interface IStorage {
   createStoryLike(like: InsertStoryLike): Promise<StoryLike>;
   deleteStoryLike(storyId: string, userFid: number): Promise<boolean>;
   hasUserLikedStory(storyId: string, userFid: number): Promise<boolean>;
+
+  // Story lock operations
+  acquireLock(storyId: string, userFid: number): Promise<StoryLock | null>;
+  releaseLock(storyId: string, userFid: number): Promise<boolean>;
+  checkLock(storyId: string): Promise<StoryLock | null>;
+  cleanupExpiredLocks(): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -312,6 +321,91 @@ export class DatabaseStorage implements IStorage {
       .limit(1);
 
     return !!like;
+  }
+
+  async acquireLock(storyId: string, userFid: number): Promise<StoryLock | null> {
+    try {
+      // Clean up expired locks first
+      await this.cleanupExpiredLocks();
+
+      // Check if story is already locked by someone else
+      const existingLock = await this.checkLock(storyId);
+      if (existingLock && existingLock.lockedByFid !== userFid) {
+        return null; // Story is locked by someone else
+      }
+
+      // If locked by same user, extend the lock
+      if (existingLock && existingLock.lockedByFid === userFid) {
+        const expiresAt = new Date(Date.now() + 60 * 1000); // 1 minute from now
+        const [updatedLock] = await db
+          .update(storyLocks)
+          .set({ expiresAt })
+          .where(eq(storyLocks.id, existingLock.id))
+          .returning();
+        return updatedLock;
+      }
+
+      // Create new lock
+      const expiresAt = new Date(Date.now() + 60 * 1000); // 1 minute from now
+      const [lock] = await db
+        .insert(storyLocks)
+        .values({
+          storyId,
+          lockedByFid: userFid,
+          expiresAt
+        })
+        .returning();
+
+      return lock;
+    } catch (error) {
+      console.warn("Error acquiring lock:", error);
+      return null;
+    }
+  }
+
+  async releaseLock(storyId: string, userFid: number): Promise<boolean> {
+    try {
+      const result = await db
+        .delete(storyLocks)
+        .where(and(
+          eq(storyLocks.storyId, storyId),
+          eq(storyLocks.lockedByFid, userFid)
+        ))
+        .returning();
+
+      return result.length > 0;
+    } catch (error) {
+      console.warn("Error releasing lock:", error);
+      return false;
+    }
+  }
+
+  async checkLock(storyId: string): Promise<StoryLock | null> {
+    try {
+      const [lock] = await db
+        .select()
+        .from(storyLocks)
+        .where(and(
+          eq(storyLocks.storyId, storyId),
+          sql`${storyLocks.expiresAt} > NOW()`
+        ))
+        .limit(1);
+
+      return lock || null;
+    } catch (error) {
+      console.warn("Error checking lock:", error);
+      return null;
+    }
+  }
+
+  async cleanupExpiredLocks(): Promise<void> {
+    try {
+      await db
+        .delete(storyLocks)
+        .where(sql`${storyLocks.expiresAt} <= NOW()`);
+    } catch (error) {
+      console.warn("Error cleaning up expired locks:", error);
+    }
   }
 }
 

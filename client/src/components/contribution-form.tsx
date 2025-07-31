@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, Lightbulb, Shield } from "lucide-react";
+import { Plus, Lightbulb, Shield, Lock, Clock } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+// import { useStoryLock } from "@/hooks/use-story-lock";
 import { apiRequest } from "@/lib/queryClient";
 import type { StoryWithContributors, User } from "@shared/schema";
 

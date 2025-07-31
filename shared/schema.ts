@@ -42,6 +42,14 @@ export const storyLikes = pgTable("story_likes", {
   createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
 });
 
+export const storyLocks = pgTable("story_locks", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  storyId: varchar("story_id").notNull().unique(),
+  lockedByFid: integer("locked_by_fid").notNull(),
+  lockedAt: timestamp("locked_at").default(sql`CURRENT_TIMESTAMP`),
+  expiresAt: timestamp("expires_at").notNull(),
+});
+
 // Insert schemas
 export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
@@ -66,12 +74,20 @@ export const insertStoryLikeSchema = createInsertSchema(storyLikes).omit({
   createdAt: true,
 });
 
+export const insertStoryLockSchema = createInsertSchema(storyLocks).omit({
+  id: true,
+  lockedAt: true,
+});
+
 // Types
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
 
 export type Story = typeof stories.$inferSelect;
 export type InsertStory = z.infer<typeof insertStorySchema>;
+
+export type StoryLock = typeof storyLocks.$inferSelect;
+export type InsertStoryLock = z.infer<typeof insertStoryLockSchema>;
 
 export type StorySegment = typeof storySegments.$inferSelect;
 export type InsertStorySegment = z.infer<typeof insertStorySegmentSchema>;

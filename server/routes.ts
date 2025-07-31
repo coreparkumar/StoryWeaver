@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertStorySegmentSchema, insertStoryLikeSchema, insertUserSchema } from "@shared/schema";
+import { insertStorySegmentSchema, insertStoryLikeSchema, insertUserSchema, insertStorySchema } from "@shared/schema";
 import { z } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -31,6 +31,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(stories);
     } catch (error) {
       console.error("Error fetching stories:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  // Create new story (restricted)
+  app.post("/api/stories", async (req, res) => {
+    try {
+      const AUTHORIZED_FID = 12345; // Replace with your actual FID
+      const { creatorFid } = req.body;
+
+      // Only allow authorized users to create stories
+      if (creatorFid !== AUTHORIZED_FID) {
+        return res.status(403).json({ 
+          error: "Story creation is restricted. Please share warps with the story creator to enable new stories." 
+        });
+      }
+
+      const storyData = insertStorySchema.parse(req.body);
+      const story = await storage.createStory(storyData);
+      
+      res.json(story);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: "Invalid story data", details: error.errors });
+      }
+      console.error("Error creating story:", error);
       res.status(500).json({ error: "Internal server error" });
     }
   });
@@ -77,7 +103,86 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Add story segment (only if user has liked the story)
+  // Acquire writing lock for a story
+  app.post("/api/stories/:id/lock", async (req, res) => {
+    try {
+      const { id: storyId } = req.params;
+      const { userFid } = req.body;
+
+      if (!userFid) {
+        return res.status(400).json({ error: "User FID is required" });
+      }
+
+      // Verify user has liked the story
+      const hasLiked = await storage.hasUserLikedStory(storyId, userFid);
+      if (!hasLiked) {
+        return res.status(403).json({ error: "You must like the story before writing" });
+      }
+
+      const lock = await storage.acquireLock(storyId, userFid);
+      if (!lock) {
+        // Check who has the lock
+        const existingLock = await storage.checkLock(storyId);
+        if (existingLock) {
+          const lockedUser = await storage.getUserByFid(existingLock.lockedByFid);
+          return res.status(423).json({ 
+            error: "Story is currently being edited", 
+            lockedBy: lockedUser?.displayName || "Another user",
+            expiresAt: existingLock.expiresAt
+          });
+        }
+        return res.status(500).json({ error: "Failed to acquire lock" });
+      }
+
+      res.json(lock);
+    } catch (error) {
+      console.error("Error acquiring lock:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  // Release writing lock for a story
+  app.delete("/api/stories/:id/lock", async (req, res) => {
+    try {
+      const { id: storyId } = req.params;
+      const { userFid } = req.body;
+
+      if (!userFid) {
+        return res.status(400).json({ error: "User FID is required" });
+      }
+
+      const success = await storage.releaseLock(storyId, userFid);
+      res.json({ success });
+    } catch (error) {
+      console.error("Error releasing lock:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  // Check lock status for a story
+  app.get("/api/stories/:id/lock", async (req, res) => {
+    try {
+      const { id: storyId } = req.params;
+      const lock = await storage.checkLock(storyId);
+      
+      if (lock) {
+        const lockedUser = await storage.getUserByFid(lock.lockedByFid);
+        res.json({
+          isLocked: true,
+          lockedBy: lockedUser?.displayName || "Unknown user",
+          lockedByFid: lock.lockedByFid,
+          expiresAt: lock.expiresAt
+        });
+      } else {
+        res.json({ isLocked: false });
+      }
+    } catch (error) {
+      console.error("Error checking lock:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  // Add story segment (only if user has liked the story and has the lock)
   app.post("/api/stories/:id/segments", async (req, res) => {
     try {
       const { id: storyId } = req.params;
@@ -98,6 +203,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ error: "You must like the story before contributing" });
       }
 
+      // Verify user has the writing lock
+      const lock = await storage.checkLock(storyId);
+      if (!lock || lock.lockedByFid !== segmentData.authorFid) {
+        return res.status(423).json({ error: "You must acquire the writing lock first" });
+      }
+
       // Get next order index
       const existingSegments = await storage.getStorySegments(storyId);
       const nextOrderIndex = Math.max(0, ...existingSegments.map(s => s.orderIndex)) + 1;
@@ -106,6 +217,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ...segmentData,
         orderIndex: nextOrderIndex
       });
+
+      // Release the lock after successful contribution
+      await storage.releaseLock(storyId, segmentData.authorFid);
 
       res.json(segment);
     } catch (error) {
