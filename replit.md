@@ -13,6 +13,8 @@ Story Weaver is a collaborative storytelling platform built as a Farcaster Mini 
 - **Sample Data Initialization**: Automated sample data creation with collaborative story "Digital Magic Adventures"
 - **Writing Lock System**: Implemented 1-minute maximum writing locks to prevent editing conflicts between users
 - **Story Creation Restrictions**: Added warp-sharing requirement for new story creation to control content quality
+- **Farcaster Deployment Setup**: Added manifest file and app icon for Mini App registration
+- **Character Limits**: Set 280-character limit per story contribution (roughly 40-60 words)
 - **Production Ready**: Application now supports persistent data storage suitable for production deployment
 
 ## User Preferences
@@ -39,13 +41,14 @@ This setup allows for shared type definitions between frontend and backend, ensu
 ## Key Components
 
 ### Database Schema (Drizzle ORM)
-The application uses a relational database design with four main tables:
+The application uses a relational database design with five main tables:
 - `users` - Farcaster user profiles with FID (Farcaster ID) as unique identifier
 - `stories` - Main story entries with metadata and creator information
 - `storySegments` - Individual contributions to stories, ordered sequentially
 - `storyLikes` - Tracks which users have liked which stories (enables writing privileges)
+- `writingLocks` - Manages exclusive writing access with 1-minute maximum duration
 
-This design allows for collaborative writing while maintaining proper attribution and permissions.
+This design allows for collaborative writing while maintaining proper attribution, permissions, and conflict prevention.
 
 ### Frontend Architecture
 - **Component Library**: shadcn/ui provides consistent, accessible UI components
@@ -85,6 +88,8 @@ The like-based permission system ensures:
 - Only engaged users can contribute (must like to write)
 - Social proof through visible like counts
 - Natural content quality filter through community engagement
+- Writing locks prevent simultaneous editing conflicts (1-minute maximum)
+- Story creation requires warp sharing to authorized FID for quality control
 
 ## External Dependencies
 
@@ -97,6 +102,8 @@ The like-based permission system ensures:
 - **Farcaster Mini App SDK**: User authentication and social context
 - **Neynar API**: Enhanced user data, cast interactions, social graph access
 - **Farcaster Protocol**: FID-based user identification, cast hash tracking
+- **Mini App Manifest**: Located at `/.well-known/farcaster.json` for app registration
+- **App Icon**: SVG icon at `/icon.svg` for Farcaster directory listing
 
 ### UI and Styling
 - **Radix UI**: Accessible component primitives for complex interactions
