@@ -244,7 +244,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const segment = await storage.createStorySegment({
         ...segmentData,
         orderIndex: nextOrderIndex
-      });
+      } as any);
 
       // Release the lock after successful contribution
       await storage.releaseLock(storyId, segmentData.authorFid);
