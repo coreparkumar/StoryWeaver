@@ -1,7 +1,8 @@
 {
   "accountAssociation": {
-    "payload": "eyJkb21haW4iOiJodHRwczovL3N0b3J5LWNoYWluLXBhYXJpdG9zaGt1bWFyLnJlcGxpdC5hcHAiLCJmaWQiOjk3NzUyMX0",
-    "signature": "oWDnYyuFmnzLPweIU5LKnffLeipZLTx8ZYpqDyqvE1zi2PQn8XsEoD63UA9k1nPX5YS2E56vbDV5a3NHTPfzDQ"
+    "header": "eyJhbGciOiJlZDI1NTE5IiwidHlwIjoiSldUIn0",
+    "payload": "eyJmaWQiOjk3NzUyMSwiZG9tYWluIjoiaHR0cHM6Ly9zdG9yeS1jaGFpbi1wYWFyaXRvc2hrdW1hci5yZXBsaXQuYXBwIn0",
+    "signature": "5khuFVcFMS_I8b-y4ukguKGkLEbMADDf1PHqePMrDnFFbqJqXiX9VZdEkgPaNgiUcwj60wmDMnr_-KRXYRc9AA"
   },
   "miniApp": {
     "name": "Story Weaver",
