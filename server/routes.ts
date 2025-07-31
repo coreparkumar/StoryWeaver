@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertStorySegmentSchema, insertStoryLikeSchema, insertUserSchema, insertStorySchema } from "@shared/schema";
+import { insertStorySegmentSchema, insertStoryLikeSchema, insertUserSchema, insertStorySchema, insertStoryCommentSchema } from "@shared/schema";
 import { z } from "zod";
 import { generalRateLimit, storyCreationRateLimit, contributionRateLimit } from "./middleware/rate-limiter";
 
@@ -286,6 +286,70 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ hasLiked });
     } catch (error) {
       console.error("Error checking like status:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  // Add comment to story (users can comment with story parts)
+  app.post("/api/stories/:id/comments", async (req, res) => {
+    try {
+      const { id: storyId } = req.params;
+      const commentData = insertStoryCommentSchema.parse({
+        ...req.body,
+        storyId
+      });
+
+      // Verify story exists
+      const story = await storage.getStory(storyId);
+      if (!story) {
+        return res.status(404).json({ error: "Story not found" });
+      }
+
+      // Verify user has liked the story
+      const hasLiked = await storage.hasUserLikedStory(storyId, commentData.authorFid);
+      if (!hasLiked) {
+        return res.status(403).json({ error: "You must like the story before commenting" });
+      }
+
+      const comment = await storage.createStoryComment(commentData);
+      res.json(comment);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: "Invalid comment data", details: error.errors });
+      }
+      console.error("Error creating story comment:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  // Incorporate comment into story (only story creator can do this)
+  app.post("/api/stories/:id/comments/:commentId/incorporate", async (req, res) => {
+    try {
+      const { id: storyId, commentId } = req.params;
+      const { userFid } = req.body;
+
+      if (!userFid) {
+        return res.status(400).json({ error: "User FID is required" });
+      }
+
+      // Verify story exists and user is the creator
+      const story = await storage.getStory(storyId);
+      if (!story) {
+        return res.status(404).json({ error: "Story not found" });
+      }
+
+      if (story.creatorFid !== userFid) {
+        return res.status(403).json({ error: "Only the story creator can incorporate comments" });
+      }
+
+      const segment = await storage.incorporateComment(commentId, userFid);
+      if (!segment) {
+        return res.status(400).json({ error: "Could not incorporate comment" });
+      }
+
+      res.json(segment);
+    } catch (error) {
+      console.error("Error incorporating comment:", error);
       res.status(500).json({ error: "Internal server error" });
     }
   });

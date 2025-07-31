@@ -7,16 +7,18 @@ Story Weaver is a collaborative storytelling platform built as a Farcaster Mini 
 ## Recent Changes
 
 **January 31, 2025**
-- **Critical 400 Error Fix**: Resolved 400 errors when users click "add to story" button by fixing schema validation and writing lock integration
-- **Writing Lock System Improved**: Updated contribution form to properly acquire and release writing locks before story submissions
-- **Schema Validation Fixed**: Removed orderIndex requirement from client requests (calculated server-side) to prevent validation errors
-- **Rate Limiting Adjusted**: Increased rate limits for development to prevent blocking legitimate user interactions
-- **Type Safety Enhanced**: Fixed TypeScript interfaces for proper backend-frontend type compatibility
+- **Major Workflow Update**: Completely redesigned collaborative storytelling model from direct contribution to comment-based system
+- **Comment-Based Contributions**: Users now like stories and submit story parts as comments rather than direct contributions
+- **Creator Moderation**: Only story creators can incorporate comments into the main story, providing quality control
+- **New Database Schema**: Added `story_comments` table with incorporation tracking and moderation features
+- **API Endpoints Updated**: Added comment creation and incorporation endpoints for the new workflow
+- **Enhanced Story Display**: Stories now show both incorporated segments and pending comments for creator review
+- **Permission Control**: Maintained like-to-comment requirement while adding creator-only incorporation permissions
+- **Writing Lock System Maintained**: Kept conflict prevention system for when creators incorporate comments
+- **Critical 400 Error Fix**: Previously resolved 400 errors when users click "add to story" button by fixing schema validation
 - **Database Migration Complete**: Successfully migrated from in-memory storage (MemStorage) to PostgreSQL database (DatabaseStorage)
-- **Full Data Persistence**: All user data, stories, story segments, and likes are now stored persistently in PostgreSQL
-- **Database Schema Deployed**: Created and deployed complete database schema with Drizzle ORM migrations
+- **Full Data Persistence**: All user data, stories, story segments, likes, and comments are now stored persistently in PostgreSQL
 - **Sample Data Initialization**: Automated sample data creation with collaborative story "Digital Magic Adventures"
-- **Writing Lock System**: Implemented 1-minute maximum writing locks to prevent editing conflicts between users
 - **Story Creation Restrictions**: Added warp-sharing requirement for new story creation to control content quality
 - **Farcaster Deployment Setup**: Added manifest file and app icon for Mini App registration
 - **Character Limits**: Set 280-character limit per story contribution (roughly 40-60 words)
@@ -47,14 +49,15 @@ This setup allows for shared type definitions between frontend and backend, ensu
 ## Key Components
 
 ### Database Schema (Drizzle ORM)
-The application uses a relational database design with five main tables:
+The application uses a relational database design with six main tables:
 - `users` - Farcaster user profiles with FID (Farcaster ID) as unique identifier
 - `stories` - Main story entries with metadata and creator information
-- `storySegments` - Individual contributions to stories, ordered sequentially
-- `storyLikes` - Tracks which users have liked which stories (enables writing privileges)
-- `writingLocks` - Manages exclusive writing access with 1-minute maximum duration
+- `storySegments` - Individual contributions to stories, ordered sequentially (incorporated content)
+- `storyComments` - User-submitted story parts awaiting creator review and incorporation
+- `storyLikes` - Tracks which users have liked which stories (enables commenting privileges)
+- `storyLocks` - Manages exclusive writing access with 1-minute maximum duration for creators
 
-This design allows for collaborative writing while maintaining proper attribution, permissions, and conflict prevention.
+This design enables moderated collaborative writing where users submit ideas via comments and creators curate the final story content.
 
 ### Frontend Architecture
 - **Component Library**: shadcn/ui provides consistent, accessible UI components
@@ -83,19 +86,22 @@ RESTful API with endpoints for:
 4. User context maintained throughout session for permissions
 
 ### Story Interaction Flow
-1. User views story and sees current content + contributor list
+1. User views story and sees current content + contributor list + pending comments
 2. To contribute, user must first "like" the story (via Farcaster)
-3. Like action grants writing privileges and opens contribution form
-4. New contributions are appended as story segments with proper ordering
-5. Real-time updates show new contributions and updated contributor counts
+3. Like action grants commenting privileges and opens comment form
+4. User submits story part as a comment for creator review
+5. Story creator can review comments and incorporate selected ones into the main story
+6. Incorporated comments become story segments and are removed from pending comments
+7. Real-time updates show new comments and incorporated content
 
 ### Permission System
-The like-based permission system ensures:
-- Only engaged users can contribute (must like to write)
-- Social proof through visible like counts
-- Natural content quality filter through community engagement
-- Writing locks prevent simultaneous editing conflicts (1-minute maximum)
-- Story creation requires warp sharing to authorized FID for quality control
+The tiered permission system ensures:
+- Only engaged users can comment (must like to contribute ideas)
+- Story creators have full editorial control over final content
+- Social proof through visible like counts and comment engagement
+- Natural content quality filter through creator curation
+- Writing locks prevent simultaneous editing conflicts when incorporating comments (1-minute maximum)
+- Story creation requires warp sharing to authorized FID for platform quality control
 
 ## External Dependencies
 

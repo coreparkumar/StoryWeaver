@@ -9,12 +9,15 @@ import {
   type InsertStoryLike,
   type StoryLock,
   type InsertStoryLock,
+  type StoryComment,
+  type InsertStoryComment,
   type StoryWithContributors,
   users,
   stories,
   storySegments,
   storyLikes,
-  storyLocks
+  storyLocks,
+  storyComments
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, sql, count, lt } from "drizzle-orm";
@@ -48,6 +51,11 @@ export interface IStorage {
   releaseLock(storyId: string, userFid: number): Promise<boolean>;
   checkLock(storyId: string): Promise<StoryLock | null>;
   cleanupExpiredLocks(): Promise<void>;
+
+  // Story comment operations
+  getStoryComments(storyId: string): Promise<(StoryComment & { author: User })[]>;
+  createStoryComment(comment: InsertStoryComment): Promise<StoryComment>;
+  incorporateComment(commentId: string, incorporatorFid: number): Promise<StorySegment | null>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -195,6 +203,9 @@ export class DatabaseStorage implements IStorage {
       .from(users)
       .where(sql`${users.fid} IN ${Array.from(contributorFids)}`);
 
+    // Get comments with authors
+    const comments = await this.getStoryComments(id);
+
     const hasLiked = viewerFid ? await this.hasUserLikedStory(id, viewerFid) : false;
 
     return {
@@ -202,7 +213,8 @@ export class DatabaseStorage implements IStorage {
       creator,
       segments: segments.map(s => ({ ...s, author: s.author! })),
       contributors,
-      hasLiked
+      hasLiked,
+      comments
     };
   }
 
@@ -405,6 +417,85 @@ export class DatabaseStorage implements IStorage {
         .where(sql`${storyLocks.expiresAt} <= NOW()`);
     } catch (error) {
       console.warn("Error cleaning up expired locks:", error);
+    }
+  }
+
+  // Story comment operations
+  async getStoryComments(storyId: string): Promise<(StoryComment & { author: User })[]> {
+    const comments = await db
+      .select({
+        id: storyComments.id,
+        storyId: storyComments.storyId,
+        authorFid: storyComments.authorFid,
+        content: storyComments.content,
+        isIncorporated: storyComments.isIncorporated,
+        incorporatedAt: storyComments.incorporatedAt,
+        incorporatedByFid: storyComments.incorporatedByFid,
+        castHash: storyComments.castHash,
+        createdAt: storyComments.createdAt,
+        author: users
+      })
+      .from(storyComments)
+      .leftJoin(users, eq(storyComments.authorFid, users.fid))
+      .where(eq(storyComments.storyId, storyId))
+      .orderBy(desc(storyComments.createdAt));
+
+    return comments.map(c => ({ ...c, author: c.author! }));
+  }
+
+  async createStoryComment(insertComment: InsertStoryComment): Promise<StoryComment> {
+    const [comment] = await db
+      .insert(storyComments)
+      .values(insertComment)
+      .returning();
+    
+    return comment;
+  }
+
+  async incorporateComment(commentId: string, incorporatorFid: number): Promise<StorySegment | null> {
+    try {
+      // Get the comment
+      const [comment] = await db
+        .select()
+        .from(storyComments)
+        .where(eq(storyComments.id, commentId));
+      
+      if (!comment || comment.isIncorporated) {
+        return null; // Comment not found or already incorporated
+      }
+
+      // Get the story to verify incorporator is the creator
+      const story = await this.getStory(comment.storyId);
+      if (!story || story.creatorFid !== incorporatorFid) {
+        return null; // Only story creator can incorporate comments
+      }
+
+      // Get next order index
+      const existingSegments = await this.getStorySegments(comment.storyId);
+      const nextOrderIndex = Math.max(0, ...existingSegments.map(s => s.orderIndex)) + 1;
+
+      // Create story segment from comment
+      const segment = await this.createStorySegment({
+        storyId: comment.storyId,
+        authorFid: comment.authorFid,
+        content: comment.content,
+        orderIndex: nextOrderIndex
+      });
+
+      // Mark comment as incorporated
+      await db
+        .update(storyComments)
+        .set({
+          isIncorporated: true,
+          incorporatedAt: new Date(),
+          incorporatedByFid: incorporatorFid
+        })
+        .where(eq(storyComments.id, commentId));
+
+      return segment;
+    } catch (error) {
+      console.warn("Error incorporating comment:", error);
+      return null;
     }
   }
 }

@@ -50,6 +50,18 @@ export const storyLocks = pgTable("story_locks", {
   expiresAt: timestamp("expires_at").notNull(),
 });
 
+export const storyComments = pgTable("story_comments", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  storyId: varchar("story_id").notNull(),
+  authorFid: integer("author_fid").notNull(),
+  content: text("content").notNull(),
+  isIncorporated: boolean("is_incorporated").default(false),
+  incorporatedAt: timestamp("incorporated_at"),
+  incorporatedByFid: integer("incorporated_by_fid"),
+  castHash: text("cast_hash"),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
+});
+
 // Insert schemas
 export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
@@ -80,6 +92,14 @@ export const insertStoryLockSchema = createInsertSchema(storyLocks).omit({
   lockedAt: true,
 });
 
+export const insertStoryCommentSchema = createInsertSchema(storyComments).omit({
+  id: true,
+  isIncorporated: true,
+  incorporatedAt: true,
+  incorporatedByFid: true,
+  createdAt: true,
+});
+
 // Types
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -96,10 +116,14 @@ export type InsertStorySegment = z.infer<typeof insertStorySegmentSchema>;
 export type StoryLike = typeof storyLikes.$inferSelect;
 export type InsertStoryLike = z.infer<typeof insertStoryLikeSchema>;
 
+export type StoryComment = typeof storyComments.$inferSelect;
+export type InsertStoryComment = z.infer<typeof insertStoryCommentSchema>;
+
 // Extended types for frontend
 export type StoryWithContributors = Story & {
   creator: User;
   segments: (StorySegment & { author: User })[];
   contributors: User[];
   hasLiked: boolean;
+  comments: (StoryComment & { author: User })[];
 };
