@@ -1,0 +1,97 @@
+import { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import { initializeFarcasterSDK, FarcasterSDK } from "@/lib/farcaster";
+import { neynarClient } from "@/lib/neynar";
+import { apiRequest } from "@/lib/queryClient";
+import type { User } from "@shared/schema";
+
+interface FarcasterContextType {
+  sdk: FarcasterSDK | null;
+  user: User | null;
+  isLoading: boolean;
+  error: Error | null;
+  ready: () => Promise<void>;
+}
+
+const FarcasterContext = createContext<FarcasterContextType | undefined>(undefined);
+
+export function FarcasterProvider({ children }: { children: ReactNode }) {
+  const [sdk, setSdk] = useState<FarcasterSDK | null>(null);
+  const [user, setUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
+
+  useEffect(() => {
+    initializeSDK();
+  }, []);
+
+  const initializeSDK = async () => {
+    try {
+      setIsLoading(true);
+      const farcasterSDK = await initializeFarcasterSDK();
+      setSdk(farcasterSDK);
+
+      // Get user from SDK context
+      if (farcasterSDK.context.user) {
+        const farcasterUser = farcasterSDK.context.user;
+        
+        try {
+          // Try to get more user details from Neynar
+          const neynarUser = await neynarClient.getUserByFid(farcasterUser.fid);
+          
+          // Create or update user in our system
+          const userData = {
+            fid: farcasterUser.fid,
+            username: neynarUser.username || farcasterUser.username,
+            displayName: neynarUser.display_name || farcasterUser.displayName,
+            pfpUrl: neynarUser.pfp_url || farcasterUser.pfpUrl,
+            followerCount: neynarUser.follower_count || 0
+          };
+
+          const response = await apiRequest("POST", "/api/users", userData);
+          const savedUser = await response.json();
+          setUser(savedUser);
+        } catch (neynarError) {
+          console.warn("Failed to fetch from Neynar, using SDK data:", neynarError);
+          
+          // Fallback to SDK data
+          const userData = {
+            fid: farcasterUser.fid,
+            username: farcasterUser.username,
+            displayName: farcasterUser.displayName,
+            pfpUrl: farcasterUser.pfpUrl,
+            followerCount: 0
+          };
+
+          const response = await apiRequest("POST", "/api/users", userData);
+          const savedUser = await response.json();
+          setUser(savedUser);
+        }
+      }
+    } catch (err) {
+      console.error("Failed to initialize Farcaster SDK:", err);
+      setError(err instanceof Error ? err : new Error("Unknown error"));
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const ready = async () => {
+    if (sdk) {
+      await sdk.actions.ready();
+    }
+  };
+
+  return (
+    <FarcasterContext.Provider value={{ sdk, user, isLoading, error, ready }}>
+      {children}
+    </FarcasterContext.Provider>
+  );
+}
+
+export function useFarcaster() {
+  const context = useContext(FarcasterContext);
+  if (context === undefined) {
+    throw new Error("useFarcaster must be used within a FarcasterProvider");
+  }
+  return context;
+}
