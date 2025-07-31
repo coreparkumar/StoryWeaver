@@ -33,6 +33,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
     
     res.json(manifest);
   });
+
+  // Farcaster webhook endpoint
+  app.post("/api/webhooks/farcaster", async (req, res) => {
+    try {
+      console.log("Farcaster webhook received:", JSON.stringify(req.body, null, 2));
+      
+      // Verify webhook signature if needed
+      // const signature = req.headers['x-farcaster-signature'];
+      
+      const { type, data } = req.body;
+      
+      // Handle different webhook events
+      switch (type) {
+        case 'cast.like':
+          console.log("Story liked:", data);
+          // Update like count or trigger notifications
+          break;
+        case 'cast.recast':
+          console.log("Story recasted:", data);
+          // Update recast count
+          break;
+        case 'cast.reply':
+          console.log("Story replied to:", data);
+          // Handle replies/comments
+          break;
+        default:
+          console.log("Unknown webhook type:", type);
+      }
+      
+      res.status(200).json({ success: true });
+    } catch (error) {
+      console.error("Webhook error:", error);
+      res.status(500).json({ error: "Webhook processing failed" });
+    }
+  });
   
   // Get story with contributors
   app.get("/api/stories/:id", async (req, res) => {
