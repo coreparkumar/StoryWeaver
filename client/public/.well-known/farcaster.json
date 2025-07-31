@@ -1,14 +1,14 @@
 {
   "accountAssociation": {
     "header": "eyJhbGciOiJlZDI1NTE5IiwidHlwIjoiSldUIn0",
-    "payload": "eyJmaWQiOjk3NzUyMSwiZG9tYWluIjoic3Rvcnktd2VhdmVyLnJlcGxpdC5hcHAifQ",
-    "signature": "4Ourmc2OIVBs0wBM-1AaCK_ajJXI_XenPYzMb4Z7ErfnyuER4229K_rnciHm2Wv4g3aYAxGOBDfBZKjvcASqAw"
+    "payload": "eyJmaWQiOjk3NzUyMSwiZG9tYWluIjoic3RvcnktY2hhaW4tcGFhcml0b3Noa3VtYXIucmVwbGl0LmFwcCJ9",
+    "signature": "teocSEG0R2LEDcNx6BzOkm7Sx_o4j3GXFAz8jSLZfqnqvGrOKbN7q6xYDEA6h7BDnhfUGgMwCvl6L5rzJJ1rBA"
   },
   "miniApp": {
     "name": "Story Weaver",
     "description": "Collaborative storytelling where users co-create dynamic narratives",
-    "icon": "https://story-weaver.replit.app/icon.svg",
-    "url": "https://story-weaver.replit.app",
+    "icon": "https://story-chain-paaritoshkumar.replit.app/icon.svg",
+    "url": "https://story-chain-paaritoshkumar.replit.app",
     "backgroundColor": "#8a63d2",
     "splashBackgroundColor": "#8a63d2"
   }
