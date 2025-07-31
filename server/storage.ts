@@ -7,9 +7,14 @@ import {
   type InsertStorySegment,
   type StoryLike,
   type InsertStoryLike,
-  type StoryWithContributors
+  type StoryWithContributors,
+  users,
+  stories,
+  storySegments,
+  storyLikes
 } from "@shared/schema";
-import { randomUUID } from "crypto";
+import { db } from "./db";
+import { eq, desc, and, sql, count } from "drizzle-orm";
 
 export interface IStorage {
   // User operations
@@ -36,208 +41,204 @@ export interface IStorage {
   hasUserLikedStory(storyId: string, userFid: number): Promise<boolean>;
 }
 
-export class MemStorage implements IStorage {
-  private users: Map<string, User>;
-  private usersByFid: Map<number, User>;
-  private stories: Map<string, Story>;
-  private storySegments: Map<string, StorySegment[]>;
-  private storyLikes: Map<string, StoryLike[]>;
-
+export class DatabaseStorage implements IStorage {
   constructor() {
-    this.users = new Map();
-    this.usersByFid = new Map();
-    this.stories = new Map();
-    this.storySegments = new Map();
-    this.storyLikes = new Map();
-
     // Initialize with sample story
     this.initializeSampleData();
   }
 
   private async initializeSampleData() {
-    // Create sample users
-    const creator = await this.createUser({
-      fid: 1,
-      username: "sarahm",
-      displayName: "Sarah Martinez",
-      pfpUrl: "https://images.unsplash.com/photo-1434030216411-0b793f4b4173?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&h=150",
-      followerCount: 1250
-    });
+    try {
+      // Check if sample data already exists
+      const existingStories = await db.select().from(stories).limit(1);
+      if (existingStories.length > 0) return;
 
-    const contributor1 = await this.createUser({
-      fid: 2,
-      username: "techwriter99",
-      displayName: "Marcus Tech",
-      pfpUrl: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&h=150",
-      followerCount: 890
-    });
+      // Create sample users
+      const creator = await this.createUser({
+        fid: 1,
+        username: "sarahm",
+        displayName: "Sarah Martinez",
+        pfpUrl: "https://images.unsplash.com/photo-1434030216411-0b793f4b4173?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&h=150",
+        followerCount: 1250
+      });
 
-    const contributor2 = await this.createUser({
-      fid: 3,
-      username: "mysticalcoder",
-      displayName: "Luna Mystical",
-      pfpUrl: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&h=150",
-      followerCount: 567
-    });
+      const contributor1 = await this.createUser({
+        fid: 2,
+        username: "techwriter99",
+        displayName: "Marcus Tech",
+        pfpUrl: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&h=150",
+        followerCount: 890
+      });
 
-    // Create sample story
-    const story = await this.createStory({
-      creatorFid: 1,
-      title: "Digital Magic Adventures",
-      initialContent: "Once upon a time, in a world where digital realms collided with ancient magic, there lived a young programmer named Zara who discovered that her late-night coding sessions were actually casting spells...",
-      castHash: "0x6932a9256f34e18892d498abb6d00ccf9f1c50d6"
-    });
+      const contributor2 = await this.createUser({
+        fid: 3,
+        username: "mysticalcoder",
+        displayName: "Luna Mystical",
+        pfpUrl: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&h=150",
+        followerCount: 567
+      });
 
-    // Create sample segments
-    await this.createStorySegment({
-      storyId: story.id,
-      authorFid: 2,
-      content: "Each line of code she wrote began to glow with ethereal light, and her computer screen became a portal to dimensions unknown. The debugging process took on a whole new meaning when the bugs were actually tiny magical creatures causing mischief in her programs.",
-      orderIndex: 1
-    });
+      // Create sample story
+      const story = await this.createStory({
+        creatorFid: 1,
+        title: "Digital Magic Adventures",
+        initialContent: "Once upon a time, in a world where digital realms collided with ancient magic, there lived a young programmer named Zara who discovered that her late-night coding sessions were actually casting spells...",
+        castHash: "0x6932a9256f34e18892d498abb6d00ccf9f1c50d6"
+      });
 
-    await this.createStorySegment({
-      storyId: story.id,
-      authorFid: 3,
-      content: "As Zara's fingers danced across the keyboard, she realized that the ancient tome of programming languages she'd inherited from her grandmother wasn't just a reference book—it was a spellbook. Every function call was an incantation, every variable declaration a binding ritual.",
-      orderIndex: 2
-    });
+      // Create sample segments
+      await this.createStorySegment({
+        storyId: story.id,
+        authorFid: 2,
+        content: "Each line of code she wrote began to glow with ethereal light, and her computer screen became a portal to dimensions unknown. The debugging process took on a whole new meaning when the bugs were actually tiny magical creatures causing mischief in her programs.",
+        orderIndex: 1
+      });
 
-    // Create sample likes
-    await this.createStoryLike({
-      storyId: story.id,
-      userFid: 2,
-      castHash: "0x6932a9256f34e18892d498abb6d00ccf9f1c50d6"
-    });
+      await this.createStorySegment({
+        storyId: story.id,
+        authorFid: 3,
+        content: "As Zara's fingers danced across the keyboard, she realized that the ancient tome of programming languages she'd inherited from her grandmother wasn't just a reference book—it was a spellbook. Every function call was an incantation, every variable declaration a binding ritual.",
+        orderIndex: 2
+      });
 
-    await this.createStoryLike({
-      storyId: story.id,
-      userFid: 3,
-      castHash: "0x6932a9256f34e18892d498abb6d00ccf9f1c50d6"
-    });
+      // Create sample likes
+      await this.createStoryLike({
+        storyId: story.id,
+        userFid: 2,
+        castHash: "0x6932a9256f34e18892d498abb6d00ccf9f1c50d6"
+      });
+
+      await this.createStoryLike({
+        storyId: story.id,
+        userFid: 3,
+        castHash: "0x6932a9256f34e18892d498abb6d00ccf9f1c50d6"
+      });
+    } catch (error) {
+      console.warn("Error initializing sample data:", error);
+    }
   }
 
   async getUser(id: string): Promise<User | undefined> {
-    return this.users.get(id);
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user || undefined;
   }
 
   async getUserByFid(fid: number): Promise<User | undefined> {
-    return this.usersByFid.get(fid);
+    const [user] = await db.select().from(users).where(eq(users.fid, fid));
+    return user || undefined;
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
-    const id = randomUUID();
-    const user: User = { 
-      ...insertUser, 
-      id,
-      pfpUrl: insertUser.pfpUrl || null,
-      followerCount: insertUser.followerCount || 0
-    };
-    this.users.set(id, user);
-    this.usersByFid.set(user.fid, user);
+    // Check if user already exists
+    const existing = await this.getUserByFid(insertUser.fid);
+    if (existing) {
+      return existing;
+    }
+
+    const [user] = await db
+      .insert(users)
+      .values(insertUser)
+      .returning();
     return user;
   }
 
   async updateUser(fid: number, updates: Partial<User>): Promise<User | undefined> {
-    const user = this.usersByFid.get(fid);
-    if (!user) return undefined;
-    
-    const updatedUser = { ...user, ...updates };
-    this.users.set(user.id, updatedUser);
-    this.usersByFid.set(fid, updatedUser);
-    return updatedUser;
+    const [user] = await db
+      .update(users)
+      .set(updates)
+      .where(eq(users.fid, fid))
+      .returning();
+    return user || undefined;
   }
 
   async getStory(id: string): Promise<Story | undefined> {
-    return this.stories.get(id);
+    const [story] = await db.select().from(stories).where(eq(stories.id, id));
+    return story || undefined;
   }
 
   async getStoryWithContributors(id: string, viewerFid?: number): Promise<StoryWithContributors | undefined> {
-    const story = this.stories.get(id);
+    const story = await this.getStory(id);
     if (!story) return undefined;
 
-    const creator = this.usersByFid.get(story.creatorFid);
+    const creator = await this.getUserByFid(story.creatorFid);
     if (!creator) return undefined;
 
-    const segments = this.storySegments.get(id) || [];
-    const segmentsWithAuthors = await Promise.all(
-      segments.map(async (segment) => {
-        const author = this.usersByFid.get(segment.authorFid);
-        return { ...segment, author: author! };
+    // Get story segments with authors
+    const segments = await db
+      .select({
+        id: storySegments.id,
+        storyId: storySegments.storyId,
+        authorFid: storySegments.authorFid,
+        content: storySegments.content,
+        orderIndex: storySegments.orderIndex,
+        createdAt: storySegments.createdAt,
+        author: users
       })
-    );
+      .from(storySegments)
+      .leftJoin(users, eq(storySegments.authorFid, users.fid))
+      .where(eq(storySegments.storyId, id))
+      .orderBy(storySegments.orderIndex);
 
     // Get unique contributors
     const contributorFids = new Set([story.creatorFid, ...segments.map(s => s.authorFid)]);
-    const contributors = Array.from(contributorFids)
-      .map(fid => this.usersByFid.get(fid))
-      .filter(Boolean) as User[];
+    const contributors = await db
+      .select()
+      .from(users)
+      .where(sql`${users.fid} IN ${Array.from(contributorFids)}`);
 
     const hasLiked = viewerFid ? await this.hasUserLikedStory(id, viewerFid) : false;
 
     return {
       ...story,
       creator,
-      segments: segmentsWithAuthors,
+      segments: segments.map(s => ({ ...s, author: s.author! })),
       contributors,
       hasLiked
     };
   }
 
   async createStory(insertStory: InsertStory): Promise<Story> {
-    const id = randomUUID();
-    const now = new Date();
-    const story: Story = { 
-      ...insertStory, 
-      id,
-      castHash: insertStory.castHash || null,
-      likeCount: 0,
-      recastCount: 0,
-      contributorCount: 1,
-      createdAt: now,
-      updatedAt: now
-    };
-    this.stories.set(id, story);
+    const [story] = await db
+      .insert(stories)
+      .values(insertStory)
+      .returning();
     return story;
   }
 
   async updateStory(id: string, updates: Partial<Story>): Promise<Story | undefined> {
-    const story = this.stories.get(id);
-    if (!story) return undefined;
-    
-    const updatedStory = { ...story, ...updates, updatedAt: new Date() };
-    this.stories.set(id, updatedStory);
-    return updatedStory;
+    const [story] = await db
+      .update(stories)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(stories.id, id))
+      .returning();
+    return story || undefined;
   }
 
   async getAllStories(): Promise<Story[]> {
-    return Array.from(this.stories.values());
+    return await db.select().from(stories).orderBy(desc(stories.createdAt));
   }
 
   async getStorySegments(storyId: string): Promise<StorySegment[]> {
-    return this.storySegments.get(storyId) || [];
+    return await db
+      .select()
+      .from(storySegments)
+      .where(eq(storySegments.storyId, storyId))
+      .orderBy(storySegments.orderIndex);
   }
 
   async createStorySegment(insertSegment: InsertStorySegment): Promise<StorySegment> {
-    const id = randomUUID();
-    const segment: StorySegment = { 
-      ...insertSegment, 
-      id,
-      createdAt: new Date()
-    };
-    
-    const segments = this.storySegments.get(insertSegment.storyId) || [];
-    segments.push(segment);
-    segments.sort((a, b) => a.orderIndex - b.orderIndex);
-    this.storySegments.set(insertSegment.storyId, segments);
+    const [segment] = await db
+      .insert(storySegments)
+      .values(insertSegment)
+      .returning();
 
     // Update story contributor count
-    const story = this.stories.get(insertSegment.storyId);
+    const story = await this.getStory(insertSegment.storyId);
     if (story) {
+      const segments = await this.getStorySegments(insertSegment.storyId);
       const uniqueContributors = new Set([story.creatorFid, ...segments.map(s => s.authorFid)]);
       await this.updateStory(insertSegment.storyId, { 
-        contributorCount: uniqueContributors.size,
-        updatedAt: new Date()
+        contributorCount: uniqueContributors.size
       });
     }
 
@@ -245,56 +246,73 @@ export class MemStorage implements IStorage {
   }
 
   async getStoryLikes(storyId: string): Promise<StoryLike[]> {
-    return this.storyLikes.get(storyId) || [];
+    return await db
+      .select()
+      .from(storyLikes)
+      .where(eq(storyLikes.storyId, storyId));
   }
 
   async createStoryLike(insertLike: InsertStoryLike): Promise<StoryLike> {
-    const id = randomUUID();
-    const like: StoryLike = { 
-      ...insertLike, 
-      id,
-      castHash: insertLike.castHash || null,
-      createdAt: new Date()
-    };
-    
-    const likes = this.storyLikes.get(insertLike.storyId) || [];
-    likes.push(like);
-    this.storyLikes.set(insertLike.storyId, likes);
+    // Check if like already exists
+    const existing = await this.hasUserLikedStory(insertLike.storyId, insertLike.userFid);
+    if (existing) {
+      // Return existing like
+      const [existingLike] = await db
+        .select()
+        .from(storyLikes)
+        .where(and(
+          eq(storyLikes.storyId, insertLike.storyId),
+          eq(storyLikes.userFid, insertLike.userFid)
+        ));
+      return existingLike;
+    }
+
+    const [like] = await db
+      .insert(storyLikes)
+      .values(insertLike)
+      .returning();
 
     // Update story like count
-    const story = this.stories.get(insertLike.storyId);
-    if (story) {
-      await this.updateStory(insertLike.storyId, { 
-        likeCount: likes.length 
-      });
-    }
+    const likes = await this.getStoryLikes(insertLike.storyId);
+    await this.updateStory(insertLike.storyId, { 
+      likeCount: likes.length 
+    });
 
     return like;
   }
 
   async deleteStoryLike(storyId: string, userFid: number): Promise<boolean> {
-    const likes = this.storyLikes.get(storyId) || [];
-    const filteredLikes = likes.filter(like => like.userFid !== userFid);
-    
-    if (filteredLikes.length === likes.length) return false;
-    
-    this.storyLikes.set(storyId, filteredLikes);
+    const result = await db
+      .delete(storyLikes)
+      .where(and(
+        eq(storyLikes.storyId, storyId),
+        eq(storyLikes.userFid, userFid)
+      ))
+      .returning();
+
+    if (result.length === 0) return false;
 
     // Update story like count
-    const story = this.stories.get(storyId);
-    if (story) {
-      await this.updateStory(storyId, { 
-        likeCount: filteredLikes.length 
-      });
-    }
+    const likes = await this.getStoryLikes(storyId);
+    await this.updateStory(storyId, { 
+      likeCount: likes.length 
+    });
 
     return true;
   }
 
   async hasUserLikedStory(storyId: string, userFid: number): Promise<boolean> {
-    const likes = this.storyLikes.get(storyId) || [];
-    return likes.some(like => like.userFid === userFid);
+    const [like] = await db
+      .select()
+      .from(storyLikes)
+      .where(and(
+        eq(storyLikes.storyId, storyId),
+        eq(storyLikes.userFid, userFid)
+      ))
+      .limit(1);
+
+    return !!like;
   }
 }
 
-export const storage = new MemStorage();
+export const storage = new DatabaseStorage();

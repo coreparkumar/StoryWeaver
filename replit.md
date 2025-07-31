@@ -4,6 +4,15 @@
 
 Story Weaver is a collaborative storytelling platform built as a Farcaster Mini App. It allows users to create and contribute to shared stories, with a like-based permission system where users must like a story to unlock writing privileges. The application combines React frontend with Express backend, using PostgreSQL for data persistence and integrating with Farcaster's social features.
 
+## Recent Changes
+
+**January 31, 2025**
+- **Database Migration Complete**: Successfully migrated from in-memory storage (MemStorage) to PostgreSQL database (DatabaseStorage)
+- **Full Data Persistence**: All user data, stories, story segments, and likes are now stored persistently in PostgreSQL
+- **Database Schema Deployed**: Created and deployed complete database schema with Drizzle ORM migrations
+- **Sample Data Initialization**: Automated sample data creation with collaborative story "Digital Magic Adventures"
+- **Production Ready**: Application now supports persistent data storage suitable for production deployment
+
 ## User Preferences
 
 Preferred communication style: Simple, everyday language.
