@@ -65,6 +65,6 @@ export const storyCreationRateLimit = createRateLimit({
 });
 
 export const contributionRateLimit = createRateLimit({
-  windowMs: 60 * 1000, // 1 minute
-  maxRequests: 50 // increased from 10 to 50 for development
+  windowMs: 10 * 1000, // 10 seconds - much shorter window
+  maxRequests: 100 // very high limit for testing
 });

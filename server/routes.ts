@@ -186,7 +186,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Add story segment (only if user has liked the story and has the lock)
-  app.post("/api/stories/:id/segments", contributionRateLimit, async (req, res) => {
+  app.post("/api/stories/:id/segments", async (req, res) => {
     try {
       const { id: storyId } = req.params;
       const segmentData = insertStorySegmentSchema.parse({
