@@ -13,21 +13,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/.well-known/farcaster.json", (req, res) => {
     res.setHeader('Content-Type', 'application/json');
     res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Cache-Control', 'public, max-age=3600');
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
     
+    // Official schema-compliant manifest
     const manifest = {
       "accountAssociation": {
         "header": "eyJhbGciOiJlZDI1NTE5IiwidHlwIjoiSldUIn0",
         "payload": "eyJmaWQiOjk3NzUyMSwiZG9tYWluIjoiaHR0cHM6Ly9zdG9yeS1jaGFpbi1wYWFyaXRvc2hrdW1hci5yZXBsaXQuYXBwIn0",
-        "signature": "Q79MydwY_5FVrkDpHu_iTi9O-4jkkOgzvtmeoC1vjd46yd1rMYwuMzGxifV8JuxBVCqKCSa7okKNlIrCXb-AAQ"
+        "signature": "5khuFVcFMS_I8b-y4ukguKGkLEbMADDf1PHqePMrDnFFbqJqXiX9VZdEkgPaNgiUcwj60wmDMnr_-KRXYRc9AA"
       },
-      "miniApp": {
+      "miniapp": {
+        "version": "1",
         "name": "Story Weaver",
         "description": "Collaborative storytelling where users co-create dynamic narratives",
-        "icon": "https://story-chain-paaritoshkumar.replit.app/icon.svg",
-        "url": "https://story-chain-paaritoshkumar.replit.app",
-        "backgroundColor": "#8a63d2",
-        "splashBackgroundColor": "#8a63d2"
+        "iconUrl": "https://story-chain-paaritoshkumar.replit.app/icon.svg",
+        "homeUrl": "https://story-chain-paaritoshkumar.replit.app",
+        "splashImageUrl": "https://story-chain-paaritoshkumar.replit.app/icon.svg",
+        "splashBackgroundColor": "#8a63d2",
+        "webhookUrl": "https://story-chain-paaritoshkumar.replit.app/api/webhooks/farcaster",
+        "subtitle": "Collaborative stories",
+        "tagline": "Write together, create magic"
       }
     };
     

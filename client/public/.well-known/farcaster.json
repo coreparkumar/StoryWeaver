@@ -4,12 +4,16 @@
     "payload": "eyJmaWQiOjk3NzUyMSwiZG9tYWluIjoiaHR0cHM6Ly9zdG9yeS1jaGFpbi1wYWFyaXRvc2hrdW1hci5yZXBsaXQuYXBwIn0",
     "signature": "5khuFVcFMS_I8b-y4ukguKGkLEbMADDf1PHqePMrDnFFbqJqXiX9VZdEkgPaNgiUcwj60wmDMnr_-KRXYRc9AA"
   },
-  "miniApp": {
+  "miniapp": {
+    "version": "1",
     "name": "Story Weaver",
     "description": "Collaborative storytelling where users co-create dynamic narratives",
-    "icon": "https://story-chain-paaritoshkumar.replit.app/icon.svg",
-    "url": "https://story-chain-paaritoshkumar.replit.app",
-    "backgroundColor": "#8a63d2",
-    "splashBackgroundColor": "#8a63d2"
+    "iconUrl": "https://story-chain-paaritoshkumar.replit.app/icon.svg",
+    "homeUrl": "https://story-chain-paaritoshkumar.replit.app",
+    "splashImageUrl": "https://story-chain-paaritoshkumar.replit.app/icon.svg",
+    "splashBackgroundColor": "#8a63d2",
+    "webhookUrl": "https://story-chain-paaritoshkumar.replit.app/api/webhooks/farcaster",
+    "subtitle": "Collaborative stories",
+    "tagline": "Write together, create magic"
   }
 }
