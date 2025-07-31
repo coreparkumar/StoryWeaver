@@ -7,6 +7,11 @@ Story Weaver is a collaborative storytelling platform built as a Farcaster Mini 
 ## Recent Changes
 
 **January 31, 2025**
+- **Critical 400 Error Fix**: Resolved 400 errors when users click "add to story" button by fixing schema validation and writing lock integration
+- **Writing Lock System Improved**: Updated contribution form to properly acquire and release writing locks before story submissions
+- **Schema Validation Fixed**: Removed orderIndex requirement from client requests (calculated server-side) to prevent validation errors
+- **Rate Limiting Adjusted**: Increased rate limits for development to prevent blocking legitimate user interactions
+- **Type Safety Enhanced**: Fixed TypeScript interfaces for proper backend-frontend type compatibility
 - **Database Migration Complete**: Successfully migrated from in-memory storage (MemStorage) to PostgreSQL database (DatabaseStorage)
 - **Full Data Persistence**: All user data, stories, story segments, and likes are now stored persistently in PostgreSQL
 - **Database Schema Deployed**: Created and deployed complete database schema with Drizzle ORM migrations

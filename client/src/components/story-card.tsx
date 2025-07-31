@@ -139,7 +139,7 @@ export default function StoryCard({ story, currentUser }: StoryCardProps) {
                     index % 3 === 2 && "bg-fc-amber bg-opacity-10 text-fc-amber"
                   )}>
                     <Users className="w-3 h-3 mr-1" />
-                    <span>{segment.author.username}</span>
+                    <span>{segment.author?.username || `FID ${segment.authorFid}`}</span>
                   </span>
                 </p>
               ))}

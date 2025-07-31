@@ -53,18 +53,18 @@ export function createRateLimit(config: RateLimitConfig) {
   };
 }
 
-// Pre-configured rate limiters
+// Pre-configured rate limiters - more lenient for development
 export const generalRateLimit = createRateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  maxRequests: 100 // 100 requests per 15 minutes
+  maxRequests: 1000 // increased from 100 to 1000 for development
 });
 
 export const storyCreationRateLimit = createRateLimit({
   windowMs: 60 * 60 * 1000, // 1 hour
-  maxRequests: 5 // 5 story creations per hour
+  maxRequests: 20 // increased from 5 to 20 for development
 });
 
 export const contributionRateLimit = createRateLimit({
   windowMs: 60 * 1000, // 1 minute
-  maxRequests: 10 // 10 contributions per minute
+  maxRequests: 50 // increased from 10 to 50 for development
 });
