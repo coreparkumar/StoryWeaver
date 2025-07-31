@@ -20,6 +20,7 @@ Story Weaver is a collaborative storytelling platform built as a Farcaster Mini 
 ## User Preferences
 
 Preferred communication style: Simple, everyday language.
+Farcaster FID: 977521 (authorized for story creation)
 
 ## System Architecture
 

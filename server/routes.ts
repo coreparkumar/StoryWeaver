@@ -38,7 +38,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Create new story (restricted)
   app.post("/api/stories", async (req, res) => {
     try {
-      const AUTHORIZED_FID = 12345; // Replace with your actual FID
+      const AUTHORIZED_FID = 977521; // Your Farcaster FID
       const { creatorFid } = req.body;
 
       // Only allow authorized users to create stories
