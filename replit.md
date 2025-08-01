@@ -7,6 +7,7 @@ Story Weaver is a collaborative storytelling platform built as a Farcaster Mini 
 ## Recent Changes
 
 **January 31, 2025**
+- **Version 1.0.1 Release**: Updated manifest version and resolved all build errors for production deployment
 - **Cast-Based Collaborative Workflow**: Implemented full Farcaster cast integration for native social collaboration
 - **Cast Comment System**: Added `cast_comments` table for tracking Farcaster cast comments and approval workflow
 - **Native Farcaster Integration**: Stories now use original and weave cast hashes for viral sharing loops
