@@ -680,42 +680,71 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Cast action endpoint for Story Weaver pattern - seed cast to collaborative story
+  // Action handler route for Story Weaver - processes cast context and enables story weaving
   app.post("/api/cast-actions/weave-story", async (req, res) => {
     try {
-      const { castHash, text: castText, fid: triggerFid, username } = req.body;
+      // Parse cast context from Farcaster action
+      const { 
+        castHash, 
+        text: castText, 
+        fid: triggerFid, 
+        username,
+        timestamp,
+        parentHash,
+        authorFid 
+      } = req.body;
       
-      console.log("Story Weaver action triggered:", { castHash, castText, triggerFid, username });
+      console.log("Story Weaver action triggered with context:", { 
+        castHash, castText, triggerFid, username, authorFid 
+      });
       
-      // Allow any user to trigger Story Weaver action
-      if (!triggerFid || !castText) {
+      // Validate required cast context
+      if (!triggerFid || !castText || !castHash) {
         return res.status(400).json({ 
-          error: "Cast data is required to weave a story." 
+          error: "Complete cast context required for story weaving" 
         });
       }
       
-      // Create a new collaborative story from the seed cast
+      // Create collaborative story from seed cast
       const storyData = {
-        creatorFid: 977521, // Stories created by Story Weaver owner
-        title: `Weaved from @${username}'s cast`,
-        initialContent: `🌟 Story seed from @${username}:\n\n"${castText}"\n\n✨ Continue this story by liking and commenting below! Each contribution becomes part of our collaborative narrative.`,
+        creatorFid: 977521, // Stories managed by Story Weaver platform
+        title: `Story from @${username}'s cast`,
+        initialContent: `🌱 Story Seed by @${username}:\n\n"${castText}"\n\n✨ This cast has been transformed into a collaborative story! Like this story to unlock commenting, then add your continuation below. Each approved contribution becomes part of our shared narrative.`,
         originalCastHash: castHash
       };
       
       const story = await storage.createStory(storyData);
       
-      // Prepare the weaved cast content
-      const weavedCastText = `🧙‍♂️ Story Weaver has transformed @${username}'s cast into a collaborative story!\n\n📖 "${castText.length > 100 ? castText.substring(0, 100) + "..." : castText}"\n\n✨ Join the story: ${story.id}\n\nLike & comment to contribute! 🪄`;
+      // For immediate posting (owner auto-approval), return frame with story
+      if (triggerFid === 977521) {
+        // Owner triggered - auto-approve and create weaved cast
+        return res.json({
+          type: "frame",
+          frameUrl: `https://story-chain-paaritoshkumar.replit.app/story/${story.id}`,
+          cast: {
+            text: `🧙‍♂️ Story Weaver: New collaborative story started!\n\n📖 From @${username}: "${castText.length > 120 ? castText.substring(0, 120) + "..." : castText}"\n\n✨ Join the weaving:`,
+            embeds: [`https://story-chain-paaritoshkumar.replit.app/story/${story.id}`],
+            parent: castHash // Reply to original cast
+          }
+        });
+      } else {
+        // Non-owner triggered - require approval workflow
+        // For now, auto-approve all weaves to demonstrate full workflow
+        return res.json({
+          type: "frame",
+          frameUrl: `https://story-chain-paaritoshkumar.replit.app/story/${story.id}`,
+          cast: {
+            text: `🧙‍♂️ Story Weaver: New collaborative story started!\n\n📖 From @${username}: "${castText.length > 120 ? castText.substring(0, 120) + "..." : castText}"\n\n✨ Join the weaving:`,
+            embeds: [`https://story-chain-paaritoshkumar.replit.app/story/${story.id}`],
+            parent: castHash // Reply to original cast
+          }
+        });
+      }
       
-      // Return cast action response with weaved cast
-      res.json({
-        type: "message",
-        message: `🧙‍♂️ Story Weaver has transformed your cast into a collaborative story! View it at: https://story-chain-paaritoshkumar.replit.app/story/${story.id}`
-      });
     } catch (error) {
-      console.error("Error weaving story from cast action:", error);
+      console.error("Error in Story Weaver action handler:", error);
       res.status(500).json({ 
-        error: "Failed to weave story from cast",
+        error: "Story weaving failed",
         details: error instanceof Error ? error.message : "Unknown error"
       });
     }
@@ -729,6 +758,71 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const redirectUrl = `https://story-chain-paaritoshkumar.replit.app/?cast=${encodeURIComponent(castHash || '')}&text=${encodeURIComponent(text || '')}`;
     
     res.redirect(redirectUrl);
+  });
+
+  // About page for cast action
+  app.get("/about", (req, res) => {
+    res.send(`
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Story Weaver - Collaborative Farcaster Storytelling</title>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <style>
+          body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
+                 max-width: 600px; margin: 0 auto; padding: 20px; line-height: 1.6; }
+          .header { text-align: center; margin-bottom: 30px; }
+          .feature { margin: 20px 0; padding: 15px; background: #f5f5f5; border-radius: 8px; }
+          .workflow { background: #e8f4ff; border-left: 4px solid #8a63d2; }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <h1>🧙‍♂️ Story Weaver</h1>
+          <p>Transform any Farcaster cast into a collaborative storytelling experience</p>
+        </div>
+        
+        <div class="feature workflow">
+          <h3>🌱 How Story Weaver Works</h3>
+          <ol>
+            <li><strong>Seed:</strong> Use the "Story Weaver" action on any cast to turn it into a story seed</li>
+            <li><strong>Weave:</strong> We create a collaborative story starting with that cast's content</li>
+            <li><strong>Collaborate:</strong> Users like the story to unlock commenting privileges</li>
+            <li><strong>Grow:</strong> Story creators approve comments, incorporating them into the narrative</li>
+            <li><strong>Share:</strong> Weaved stories get posted back to Farcaster for viral collaboration</li>
+          </ol>
+        </div>
+        
+        <div class="feature">
+          <h3>✨ Features</h3>
+          <ul>
+            <li>Turn any cast into a collaborative story seed</li>
+            <li>Like-to-comment permission system</li>
+            <li>Creator-moderated content incorporation</li>
+            <li>Native Farcaster cast integration</li>
+            <li>Viral story sharing loops</li>
+          </ul>
+        </div>
+        
+        <div class="feature">
+          <h3>🎯 Perfect For</h3>
+          <ul>
+            <li>Creative writing communities</li>
+            <li>Interactive storytelling</li>
+            <li>Collaborative world-building</li>
+            <li>Community-driven narratives</li>
+          </ul>
+        </div>
+        
+        <p style="text-align: center; margin-top: 30px;">
+          <a href="https://story-chain-paaritoshkumar.replit.app" style="color: #8a63d2; text-decoration: none;">
+            🏠 Visit Story Weaver →
+          </a>
+        </p>
+      </body>
+      </html>
+    `);
   });
 
   const httpServer = createServer(app);

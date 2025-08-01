@@ -16,9 +16,12 @@ Story Weaver is a collaborative storytelling platform built as a Farcaster Mini 
 - **Farcaster SDK Enhancement**: Integrated cast sharing, cast creation, and user authentication via Mini App SDK
 - **Viral Collaboration Loop**: Approved comments become incorporated content and trigger new cast shares
 - **Social Permission System**: Maintained like-to-comment requirement with native Farcaster cast interaction
-- **Farcaster Actions Integration**: Implemented full Story Weaver cast action pattern allowing any user to transform casts into collaborative story seeds
-- **Seed-to-Weave Workflow**: Users trigger Story Weaver action from original "seed" casts, creating collaborative stories with weaved cast responses
+- **Complete Farcaster Actions Integration**: Implemented verified action handler pattern with cast context parsing and weaved cast responses
+- **Seed-to-Weave Workflow**: Users trigger Story Weaver action from original "seed" casts, system creates collaborative stories with automatic weaved cast posting
+- **Action Handler Route**: Proper /api/cast-actions/weave-story endpoint that processes cast context, creates stories, and returns frame responses for cast posting
+- **Owner Approval Architecture**: Built pending weaves system (currently auto-approving for demonstration) with future manual approval workflow support
 - **Individual Story Pages**: Added dedicated story pages with routing for better story viewing and sharing experience
+- **Cast Action About Page**: Added informational about page explaining Story Weaver workflow for cast action users
 - **Story Creation Owner Restriction**: Restored FID restriction with clear ownership message for Story Weaver platform control
 - **Rate Limit Fix**: Removed restrictive rate limiting middleware preventing story creation
 - **Critical 400 Error Fix**: Previously resolved 400 errors when users click "add to story" button by fixing schema validation

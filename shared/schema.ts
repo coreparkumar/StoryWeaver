@@ -153,6 +153,28 @@ export const insertCastCommentSchema = createInsertSchema(castComments).omit({
 });
 export type InsertCastComment = z.infer<typeof insertCastCommentSchema>;
 
+// Pending weaves for owner approval workflow
+export const pendingWeaves = pgTable("pending_weaves", {
+  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  storyId: text("story_id").notNull().references(() => stories.id, { onDelete: "cascade" }),
+  originalCastHash: text("original_cast_hash").notNull(),
+  triggerFid: integer("trigger_fid").notNull(),
+  seedContent: text("seed_content").notNull(),
+  seedAuthor: text("seed_author").notNull(),
+  status: text("status").notNull().default("pending"), // pending, approved, declined
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  approvedAt: timestamp("approved_at"),
+  weaveCastHash: text("weave_cast_hash"), // Hash of resulting weave cast
+});
+
+export const insertPendingWeaveSchema = createInsertSchema(pendingWeaves).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type PendingWeave = typeof pendingWeaves.$inferSelect;
+export type InsertPendingWeave = z.infer<typeof insertPendingWeaveSchema>;
+
 // Extended types for frontend
 export type StoryWithContributors = Story & {
   creator: User;
