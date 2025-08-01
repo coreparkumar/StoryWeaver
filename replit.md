@@ -7,14 +7,15 @@ Story Weaver is a collaborative storytelling platform built as a Farcaster Mini 
 ## Recent Changes
 
 **January 31, 2025**
-- **Major Workflow Update**: Completely redesigned collaborative storytelling model from direct contribution to comment-based system
-- **Comment-Based Contributions**: Users now like stories and submit story parts as comments rather than direct contributions
-- **Creator Moderation**: Only story creators can incorporate comments into the main story, providing quality control
-- **New Database Schema**: Added `story_comments` table with incorporation tracking and moderation features
-- **API Endpoints Updated**: Added comment creation and incorporation endpoints for the new workflow
-- **Enhanced Story Display**: Stories now show both incorporated segments and pending comments for creator review
-- **Permission Control**: Maintained like-to-comment requirement while adding creator-only incorporation permissions
-- **Writing Lock System Maintained**: Kept conflict prevention system for when creators incorporate comments
+- **Cast-Based Collaborative Workflow**: Implemented full Farcaster cast integration for native social collaboration
+- **Cast Comment System**: Added `cast_comments` table for tracking Farcaster cast comments and approval workflow
+- **Native Farcaster Integration**: Stories now use original and weave cast hashes for viral sharing loops
+- **Creator Cast Management**: Story creators can approve cast comments and automatically repost as new weave casts
+- **Enhanced Database Schema**: Added `originalCastHash`, `latestWeaveCastHash`, and `weaveCastCount` to stories table
+- **Cast-Based API Endpoints**: New endpoints for cast comment creation, approval, and weave cast management
+- **Farcaster SDK Enhancement**: Integrated cast sharing, cast creation, and user authentication via Mini App SDK
+- **Viral Collaboration Loop**: Approved comments become incorporated content and trigger new cast shares
+- **Social Permission System**: Maintained like-to-comment requirement with native Farcaster cast interaction
 - **Critical 400 Error Fix**: Previously resolved 400 errors when users click "add to story" button by fixing schema validation
 - **Database Migration Complete**: Successfully migrated from in-memory storage (MemStorage) to PostgreSQL database (DatabaseStorage)
 - **Full Data Persistence**: All user data, stories, story segments, likes, and comments are now stored persistently in PostgreSQL

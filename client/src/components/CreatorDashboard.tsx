@@ -10,6 +10,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { useFarcaster } from "@/hooks/use-farcaster";
 import { useToast } from "@/hooks/use-toast";
 import type { StoryComment, User, StoryWithContributors } from "@shared/schema";
+import { CastCreator } from "./CastCreator";
 
 interface CreatorDashboardProps {
   story: StoryWithContributors;
@@ -26,15 +27,23 @@ export function CreatorDashboard({ story }: CreatorDashboardProps) {
   }
 
   const { data: pendingComments = [], isLoading } = useQuery({
-    queryKey: ['/api/stories', story.id, 'pending-comments'],
+    queryKey: ['/api/stories', story.id, 'cast-comments'],
     refetchInterval: 10000, // Refresh every 10 seconds
     enabled: !!user,
   });
 
+  const { data: castComments = [] } = useQuery({
+    queryKey: ['/api/stories', story.id, 'cast-comments', 'pending'],
+    refetchInterval: 5000,
+    enabled: !!user,
+  });
+
   const approveCommentMutation = useMutation({
-    mutationFn: async (commentId: string) => {
-      const response = await apiRequest('POST', `/api/comments/${commentId}/approve`, { userFid: user.fid });
-      return response.json();
+    mutationFn: async ({ commentId, weaveCastHash }: { commentId: string; weaveCastHash: string }) => {
+      return apiRequest(`/api/cast-comments/${commentId}/approve`, {
+        method: 'POST',
+        body: { userFid: user.fid, weaveCastHash }
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/stories', story.id] });
