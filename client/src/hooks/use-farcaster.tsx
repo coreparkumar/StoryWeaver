@@ -71,6 +71,9 @@ export function FarcasterProvider({ children }: { children: ReactNode }) {
       // Call ready() automatically after successful initialization
       console.log("Farcaster SDK ready");
       await farcasterSDK.actions.ready();
+      
+      // Cast actions are automatically available through manifest configuration
+      console.log("Cast actions available via manifest at /.well-known/farcaster.json");
     } catch (err) {
       console.error("Failed to initialize Farcaster SDK:", err);
       setError(err instanceof Error ? err : new Error("Unknown error"));

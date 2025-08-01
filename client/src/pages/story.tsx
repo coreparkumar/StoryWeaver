@@ -89,7 +89,7 @@ export default function StoryPage() {
 
           {/* Story Content */}
           <div className="space-y-6">
-            <StoryCard story={story} user={user} isExpanded={true} />
+            <StoryCard story={story} />
             
             {/* Story metadata for weaved stories */}
             {story.originalCastHash && (
