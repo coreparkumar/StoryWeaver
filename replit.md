@@ -16,7 +16,7 @@ Story Weaver is a collaborative storytelling platform built as a Farcaster Mini 
 - **Farcaster SDK Enhancement**: Integrated cast sharing, cast creation, and user authentication via Mini App SDK
 - **Viral Collaboration Loop**: Approved comments become incorporated content and trigger new cast shares
 - **Social Permission System**: Maintained like-to-comment requirement with native Farcaster cast interaction
-- **Story Creation Access Opened**: Removed FID restrictions to allow any authenticated user to create stories
+- **Story Creation Owner Restriction**: Restored FID restriction with clear ownership message for Story Weaver platform control
 - **Rate Limit Fix**: Removed restrictive rate limiting middleware preventing story creation
 - **Critical 400 Error Fix**: Previously resolved 400 errors when users click "add to story" button by fixing schema validation
 - **Database Migration Complete**: Successfully migrated from in-memory storage (MemStorage) to PostgreSQL database (DatabaseStorage)

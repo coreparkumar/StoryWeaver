@@ -120,15 +120,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Create new story (open to all users)
+  // Create new story (restricted to Story Weaver owner)
   app.post("/api/stories", async (req, res) => {
     try {
+      const AUTHORIZED_FID = 977521; // Story Weaver owner FID
       const { creatorFid } = req.body;
 
-      // Allow any authenticated user to create stories
+      // Only allow the Story Weaver owner to create stories
       if (!creatorFid) {
         return res.status(400).json({ 
           error: "Creator FID is required to create a story." 
+        });
+      }
+
+      if (creatorFid !== AUTHORIZED_FID) {
+        return res.status(403).json({ 
+          error: "You are not the owner of Story Weaver. Only the owner can create new stories." 
         });
       }
 
