@@ -767,8 +767,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/cast-share", (req, res) => {
     const { castHash, text } = req.query;
     
+    // Ensure query params are strings
+    const castHashStr = Array.isArray(castHash) ? castHash[0] : String(castHash || '');
+    const textStr = Array.isArray(text) ? text[0] : String(text || '');
+    
     // Redirect to the main app with cast data
-    const redirectUrl = `https://worthifyme.in/?cast=${encodeURIComponent(castHash || '')}&text=${encodeURIComponent(text || '')}`;
+    const redirectUrl = `https://worthifyme.in/?cast=${encodeURIComponent(castHashStr)}&text=${encodeURIComponent(textStr)}`;
     
     res.redirect(redirectUrl);
   });
