@@ -22,6 +22,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(404).json({ error: "Image not found" });
     }
   });
+
+  // Serve Story Weaver icon with proper headers
+  app.get("/story-weaver-icon.png", (req, res) => {
+    const imagePath = path.resolve(import.meta.dirname, "..", "client", "public", "story-weaver-icon.png");
+    if (fs.existsSync(imagePath)) {
+      res.setHeader('Content-Type', 'image/png');
+      res.setHeader('Cache-Control', 'public, max-age=86400');
+      res.sendFile(imagePath);
+    } else {
+      res.status(404).json({ error: "Icon not found" });
+    }
+  });
   
   // Serve Farcaster manifest with proper headers
   app.get("/.well-known/farcaster.json", (req, res) => {
@@ -40,7 +52,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         "version": "1",
         "name": "Story Weaver",
         "description": "Collaborative storytelling where users co-create dynamic narratives",
-        "iconUrl": "https://worthifyme.in/icon.svg",
+        "iconUrl": "https://worthifyme.in/story-weaver-icon.png",
         "homeUrl": "https://worthifyme.in",
         "splashImageUrl": "https://worthifyme.in/story-weaver-promo.jpg",
         "splashBackgroundColor": "#8a63d2",
