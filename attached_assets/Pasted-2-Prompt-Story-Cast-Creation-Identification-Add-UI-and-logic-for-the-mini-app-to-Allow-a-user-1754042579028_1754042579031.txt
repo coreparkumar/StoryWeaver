@@ -1,0 +1,93 @@
+2. Prompt: Story Cast Creation & Identification
+Add UI and logic for the mini app to:
+Allow a user (cast owner) to create a new story weaving session by inputting a story seed (text).
+
+
+Store the session in the backend database with a unique session ID and the Farcaster cast hash (if posting the seed story as a cast via SDK or backend).
+
+
+Expose the cast hash/session ID so that others can join and comment.
+
+
+3. Prompt: Commenting and Sharing Logic
+Implement in the mini app:
+When a user visits a weave session, display the current story and a comment box.
+
+
+Allow any user to comment on the session (add their story part).
+
+
+Provide a "Share to Farcaster" button for commenters that:
+
+
+Shares their comment both to the mini app backend (as a pending comment).
+
+
+Optionally, shares the comment or session as a new Farcaster cast referencing the original story cast hash.
+
+
+On comment submission and share, store the submission and metadata (FID, comment text, session ID, etc.) in the backend.
+
+
+4. Prompt: Backend Story Weave Management
+Set up backend APIs and database schema to:
+Track all sessions (original cast hash, creator FID, story status: active/ended).
+
+
+Store all comments related to a session, including:
+
+
+Commenter FID, comment text, timestamp, session ID, approval status (pending/approved/declined).
+
+
+Support logic to only allow new comments/shares if session status is "active".
+
+
+5. Prompt: Approval & Moderation Interface for Owner
+In the mini app UI, add an interface for the session/cast owner (matching original FID) to:
+See all incoming (pending) comments for their story session.
+
+
+For each comment, display an "Approve" button.
+
+
+When approved, append the comment to the current story in the backend.
+
+
+Trigger posting a new cast on the owner's Farcaster feed with the updated (woven) story, referencing or quoting the original cast.
+
+
+Optionally, notify the commenter (e.g., in-app, via Farcaster mention, or mini app popup) that their comment was approved.
+
+
+Add an "End Weave" button that changes session status and disables further comments/shares.
+
+
+6. Prompt: Weave Ending and Access Control
+Ensure that when the owner ends a weave session:
+The backend marks the session as "ended".
+
+
+The mini app disables the comment box and share button for all users.
+
+
+Optionally, the app posts a “Weave ended” cast on the owner’s feed and displays a summary in the mini app UI.
+
+
+7. Prompt: SDK & Cast Integration
+Integrate the Farcaster Mini App SDK so that:
+On visiting via castShareUrl, capture the original cast hash and auto-initialize or join the correct story weave session.
+
+
+Use SDK actions or backend scripts to post new casts (for new combined stories) on behalf of the owner (requires owner's consent/key or backend signing).
+
+
+Fetch current user context to enforce permissions (only session owner can approve/end weave).
+
+
+8. Prompt: Testing and Verification
+Add test scripts/UI to:
+Simulate full user flow: create story, comment and share, approve comment, update story, end weave.
+
+
+Confirm that manifests and endpoints (/.well-known/farcaster.json, API routes) work on both Replit URL and custom domain, and all Farcaster-specific features (sharing, embedding, SDK actions) are functional.

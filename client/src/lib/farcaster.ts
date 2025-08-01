@@ -5,12 +5,23 @@ export interface FarcasterSDK {
   context: {
     user?: {
       fid: number;
-      username: string;
-      displayName: string;
+      username?: string;
+      displayName?: string;
       pfpUrl?: string;
     };
+    client?: {
+      platformType?: 'web' | 'mobile';
+      clientFid: number;
+      added: boolean;
+    };
+    location?: {
+      type: 'cast_embed' | 'cast_share' | 'notification' | 'open_miniapp' | 'launcher' | 'channel';
+    };
   };
-  on: (event: string, callback: (data: any) => void) => void;
+  quickAuth?: {
+    fetch: (url: string, options?: RequestInit) => Promise<Response>;
+    getToken: () => Promise<{ token: string }>;
+  };
 }
 
 // Mock SDK for development - replace with actual Farcaster Mini App SDK
@@ -22,14 +33,28 @@ export const createMockSDK = (): FarcasterSDK => ({
   },
   context: {
     user: {
-      fid: 12345,
-      username: "alexchen",
-      displayName: "Alex Chen",
+      fid: 977521, // User's actual FID
+      username: "worthifyme",
+      displayName: "Story Creator",
       pfpUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&h=150"
+    },
+    client: {
+      platformType: 'web',
+      clientFid: 977521,
+      added: false
+    },
+    location: {
+      type: 'open_miniapp'
     }
   },
-  on: (event: string, callback: (data: any) => void) => {
-    console.log(`Listening for event: ${event}`);
+  quickAuth: {
+    fetch: async (url: string, options?: RequestInit) => {
+      // Mock authenticated fetch for development
+      return fetch(url, options);
+    },
+    getToken: async () => {
+      return { token: 'mock-jwt-token-for-development' };
+    }
   }
 });
 
@@ -41,7 +66,8 @@ export const initializeFarcasterSDK = async (): Promise<FarcasterSDK> => {
       // Check if running in Farcaster Mini App environment
       const isInFarcaster = window.location.search.includes("miniApp=true") || 
                            window.location.pathname.startsWith("/mini") ||
-                           window.location.search.includes("fc_frame=");
+                           window.location.search.includes("fc_frame=") ||
+                           window.parent !== window; // Running in iframe (Farcaster client)
       
       if (isInFarcaster) {
         try {
@@ -49,8 +75,8 @@ export const initializeFarcasterSDK = async (): Promise<FarcasterSDK> => {
           const { sdk } = await import('@farcaster/miniapp-sdk');
           console.log("Running in Farcaster environment - using real SDK");
           
-          // Get the context (which is a promise in the real SDK)
-          const context = await sdk.context;
+          // Context may be a promise in some versions
+          const context = await Promise.resolve(sdk.context);
           
           return {
             actions: {
@@ -59,15 +85,17 @@ export const initializeFarcasterSDK = async (): Promise<FarcasterSDK> => {
             context: {
               user: context.user ? {
                 fid: context.user.fid,
-                username: context.user.username || `user${context.user.fid}`,
-                displayName: context.user.displayName || context.user.username || `User ${context.user.fid}`,
+                username: context.user.username,
+                displayName: context.user.displayName,
                 pfpUrl: context.user.pfpUrl
-              } : undefined
+              } : undefined,
+              client: context.client,
+              location: context.location
             },
-            on: (event: string, callback: (data: any) => void) => {
-              // Adapt the SDK's event system to our interface
-              sdk.on(event as any, callback);
-            }
+            quickAuth: sdk.quickAuth ? {
+              fetch: sdk.quickAuth.fetch,
+              getToken: sdk.quickAuth.getToken
+            } : undefined
           };
         } catch (sdkError) {
           console.warn("Failed to load Farcaster SDK, using mock:", sdkError);

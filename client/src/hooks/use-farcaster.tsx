@@ -41,8 +41,8 @@ export function FarcasterProvider({ children }: { children: ReactNode }) {
           // Create or update user in our system
           const userData = {
             fid: farcasterUser.fid,
-            username: neynarUser.username || farcasterUser.username,
-            displayName: neynarUser.display_name || farcasterUser.displayName,
+            username: neynarUser.username || farcasterUser.username || `user${farcasterUser.fid}`,
+            displayName: neynarUser.display_name || farcasterUser.displayName || farcasterUser.username || `User ${farcasterUser.fid}`,
             pfpUrl: neynarUser.pfp_url || farcasterUser.pfpUrl,
             followerCount: neynarUser.follower_count || 0
           };
@@ -56,8 +56,8 @@ export function FarcasterProvider({ children }: { children: ReactNode }) {
           // Fallback to SDK data
           const userData = {
             fid: farcasterUser.fid,
-            username: farcasterUser.username,
-            displayName: farcasterUser.displayName,
+            username: farcasterUser.username || `user${farcasterUser.fid}`,
+            displayName: farcasterUser.displayName || farcasterUser.username || `User ${farcasterUser.fid}`,
             pfpUrl: farcasterUser.pfpUrl,
             followerCount: 0
           };
