@@ -436,6 +436,163 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Story session management endpoints
+  
+  // End a story weave session (creator only)
+  app.post("/api/stories/:id/end-session", async (req, res) => {
+    try {
+      const { id: storyId } = req.params;
+      const { userFid } = req.body;
+
+      if (!userFid) {
+        return res.status(400).json({ error: "User FID is required" });
+      }
+
+      // Get story to verify creator
+      const story = await storage.getStory(storyId);
+      if (!story) {
+        return res.status(404).json({ error: "Story not found" });
+      }
+
+      // Only creator can end session
+      if (story.creatorFid !== userFid) {
+        return res.status(403).json({ error: "Only the story creator can end the session" });
+      }
+
+      // End the session
+      const updatedStory = await storage.endStorySession(storyId);
+      res.json(updatedStory);
+    } catch (error) {
+      console.error("Error ending story session:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  // Comment approval endpoints
+  
+  // Approve a comment and incorporate it into the story
+  app.post("/api/comments/:commentId/approve", async (req, res) => {
+    try {
+      const { commentId } = req.params;
+      const { userFid } = req.body;
+
+      if (!userFid) {
+        return res.status(400).json({ error: "User FID is required" });
+      }
+
+      // Get comment and verify permissions
+      const comment = await storage.getStoryComment(commentId);
+      if (!comment) {
+        return res.status(404).json({ error: "Comment not found" });
+      }
+
+      const story = await storage.getStory(comment.storyId);
+      if (!story) {
+        return res.status(404).json({ error: "Story not found" });
+      }
+
+      // Only creator can approve comments
+      if (story.creatorFid !== userFid) {
+        return res.status(403).json({ error: "Only the story creator can approve comments" });
+      }
+
+      // Check if session is still active
+      if (story.sessionStatus !== "active") {
+        return res.status(400).json({ error: "Story session has ended" });
+      }
+
+      // Approve and incorporate the comment
+      const result = await storage.approveAndIncorporateComment(commentId, userFid);
+      res.json(result);
+    } catch (error) {
+      console.error("Error approving comment:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  // Decline a comment
+  app.post("/api/comments/:commentId/decline", async (req, res) => {
+    try {
+      const { commentId } = req.params;
+      const { userFid } = req.body;
+
+      if (!userFid) {
+        return res.status(400).json({ error: "User FID is required" });
+      }
+
+      // Get comment and verify permissions
+      const comment = await storage.getStoryComment(commentId);
+      if (!comment) {
+        return res.status(404).json({ error: "Comment not found" });
+      }
+
+      const story = await storage.getStory(comment.storyId);
+      if (!story) {
+        return res.status(404).json({ error: "Story not found" });
+      }
+
+      // Only creator can decline comments
+      if (story.creatorFid !== userFid) {
+        return res.status(403).json({ error: "Only the story creator can decline comments" });
+      }
+
+      // Decline the comment
+      const updatedComment = await storage.declineComment(commentId);
+      res.json(updatedComment);
+    } catch (error) {
+      console.error("Error declining comment:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  // Get pending comments for a story (creator only)
+  app.get("/api/stories/:id/pending-comments", async (req, res) => {
+    try {
+      const { id: storyId } = req.params;
+      const userFid = parseInt(req.query.userFid as string);
+
+      if (!userFid) {
+        return res.status(400).json({ error: "User FID is required" });
+      }
+
+      // Get story to verify creator
+      const story = await storage.getStory(storyId);
+      if (!story) {
+        return res.status(404).json({ error: "Story not found" });
+      }
+
+      // Only creator can see pending comments
+      if (story.creatorFid !== userFid) {
+        return res.status(403).json({ error: "Only the story creator can view pending comments" });
+      }
+
+      const pendingComments = await storage.getPendingComments(storyId);
+      res.json(pendingComments);
+    } catch (error) {
+      console.error("Error fetching pending comments:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  // Cast sharing endpoint
+  app.post("/api/stories/:id/share-to-farcaster", async (req, res) => {
+    try {
+      const { id: storyId } = req.params;
+      const { userFid, castHash } = req.body;
+
+      if (!userFid || !castHash) {
+        return res.status(400).json({ error: "User FID and cast hash are required" });
+      }
+
+      // Update story with shared cast hash
+      const result = await storage.updateStorySharedCast(storyId, userFid, castHash);
+      res.json(result);
+    } catch (error) {
+      console.error("Error sharing to Farcaster:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

@@ -1,19 +1,34 @@
-import { useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { useFarcaster } from "@/hooks/use-farcaster";
-import { useStory } from "@/hooks/use-story";
-import StoryCard from "@/components/story-card";
+import { StoryCard } from "@/components/StoryCard";
+import { StoryCreationModal } from "@/components/StoryCreationModal";
 import { Card, CardContent } from "@/components/ui/card";
-import { Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Loader2, Sparkles, Users, MessageSquare, Plus, ArrowRight } from "lucide-react";
+import { apiRequest } from "@/lib/queryClient";
+import type { StoryWithContributors } from "@shared/schema";
 import promoImage from "../assets/story-weaver-promo.jpg";
 
 export default function Home() {
-  const { user, isLoading: fcLoading, ready } = useFarcaster();
-  const { story, isLoading: storyLoading, error } = useStory("sample-story-id", user?.fid);
+  const { user, isLoading: fcLoading } = useFarcaster();
+  
+  // Fetch all stories
+  const { data: stories = [], isLoading: storiesLoading, error } = useQuery({
+    queryKey: ['/api/stories'],
+    refetchInterval: 15000, // Refresh every 15 seconds
+  });
 
-  // SDK ready() is now called automatically in the FarcasterProvider
-  // No need to call it manually in components
+  // Get story with full details for display
+  const { data: featuredStory, isLoading: storyLoading } = useQuery({
+    queryKey: ['/api/stories', stories[0]?.id],
+    enabled: !!stories[0]?.id && !!user,
+    refetchInterval: 10000, // Refresh every 10 seconds
+  });
 
-  if (fcLoading || storyLoading) {
+  const isLoading = fcLoading || storiesLoading || storyLoading;
+
+  if (isLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-50 to-purple-50 flex items-center justify-center">
         <Card className="w-full max-w-md mx-4">
@@ -96,15 +111,105 @@ export default function Home() {
       </div>
 
       {/* Main Content */}
-      <main className="max-w-2xl mx-auto px-4 py-6">
-        {story ? (
-          <StoryCard story={story} currentUser={user} />
+      <main className="max-w-4xl mx-auto px-4 py-6">
+        {/* Welcome Section */}
+        <div className="mb-8">
+          <div className="text-center mb-6">
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">Collaborative Storytelling</h2>
+            <p className="text-gray-600">Like stories to unlock contribution privileges. Share your story parts and watch creators weave them into magical narratives.</p>
+          </div>
+
+          {/* Feature Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            <Card className="bg-gradient-to-br from-purple-50 to-pink-50 border-purple-200">
+              <CardContent className="pt-4">
+                <div className="flex items-center space-x-3">
+                  <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
+                    <Sparkles className="w-5 h-5 text-purple-600" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-purple-900">Like to Contribute</h3>
+                    <p className="text-sm text-purple-700">Heart stories to unlock writing privileges</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-gradient-to-br from-blue-50 to-cyan-50 border-blue-200">
+              <CardContent className="pt-4">
+                <div className="flex items-center space-x-3">
+                  <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                    <MessageSquare className="w-5 h-5 text-blue-600" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-blue-900">Submit Parts</h3>
+                    <p className="text-sm text-blue-700">Add your story parts as comments</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-gradient-to-br from-green-50 to-emerald-50 border-green-200">
+              <CardContent className="pt-4">
+                <div className="flex items-center space-x-3">
+                  <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                    <Users className="w-5 h-5 text-green-600" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-green-900">Creator Approval</h3>
+                    <p className="text-sm text-green-700">Authors weave approved parts into stories</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Create Story Section */}
+          {user && user.fid === 977521 && (
+            <div className="text-center mb-6">
+              <StoryCreationModal />
+            </div>
+          )}
+        </div>
+
+        {/* Featured Story */}
+        {featuredStory ? (
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <h3 className="text-xl font-bold text-gray-900">Featured Collaborative Story</h3>
+              <Badge variant="outline" className="border-fc-purple text-fc-purple">
+                Live Collaboration
+              </Badge>
+            </div>
+            <StoryCard story={featuredStory} currentUser={user} />
+          </div>
+        ) : stories.length > 0 ? (
+          <Card>
+            <CardContent className="pt-6">
+              <div className="text-center">
+                <h2 className="text-lg font-semibold text-gray-900">Stories Available</h2>
+                <p className="text-sm text-gray-600 mt-2">Connect with Farcaster to view and contribute to collaborative stories!</p>
+                {!user && (
+                  <div className="mt-4 p-4 bg-fc-purple/5 border border-fc-purple/20 rounded-lg">
+                    <p className="text-sm text-fc-purple">
+                      Please connect with Farcaster to access Story Weaver's collaborative features
+                    </p>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
         ) : (
           <Card>
             <CardContent className="pt-6">
               <div className="text-center">
-                <h2 className="text-lg font-semibold text-gray-900">No Story Available</h2>
-                <p className="text-sm text-gray-600 mt-2">Check back later for collaborative stories!</p>
+                <h2 className="text-lg font-semibold text-gray-900">No Stories Available Yet</h2>
+                <p className="text-sm text-gray-600 mt-2">Be the first to create a collaborative story!</p>
+                {user && user.fid === 977521 && (
+                  <div className="mt-4">
+                    <StoryCreationModal />
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>

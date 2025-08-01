@@ -18,9 +18,12 @@ export const stories = pgTable("stories", {
   title: text("title").notNull(),
   initialContent: text("initial_content").notNull(),
   castHash: text("cast_hash"),
+  sessionStatus: text("session_status").notNull().default("active"), // "active" | "ended"
   likeCount: integer("like_count").default(0),
   recastCount: integer("recast_count").default(0),
   contributorCount: integer("contributor_count").default(1),
+  maxContributions: integer("max_contributions").default(10), // Optional limit
+  endedAt: timestamp("ended_at"),
   createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
   updatedAt: timestamp("updated_at").default(sql`CURRENT_TIMESTAMP`),
 });
@@ -55,10 +58,13 @@ export const storyComments = pgTable("story_comments", {
   storyId: varchar("story_id").notNull(),
   authorFid: integer("author_fid").notNull(),
   content: text("content").notNull(),
+  approvalStatus: text("approval_status").notNull().default("pending"), // "pending" | "approved" | "declined"
   isIncorporated: boolean("is_incorporated").default(false),
   incorporatedAt: timestamp("incorporated_at"),
   incorporatedByFid: integer("incorporated_by_fid"),
   castHash: text("cast_hash"),
+  sharedCastHash: text("shared_cast_hash"), // Cast hash when user shares to Farcaster
+  notificationSent: boolean("notification_sent").default(false),
   createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
 });
 
@@ -72,6 +78,7 @@ export const insertStorySchema = createInsertSchema(stories).omit({
   likeCount: true,
   recastCount: true,
   contributorCount: true,
+  endedAt: true,
   createdAt: true,
   updatedAt: true,
 });
@@ -94,9 +101,11 @@ export const insertStoryLockSchema = createInsertSchema(storyLocks).omit({
 
 export const insertStoryCommentSchema = createInsertSchema(storyComments).omit({
   id: true,
+  approvalStatus: true,
   isIncorporated: true,
   incorporatedAt: true,
   incorporatedByFid: true,
+  notificationSent: true,
   createdAt: true,
 });
 

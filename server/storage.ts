@@ -56,6 +56,16 @@ export interface IStorage {
   getStoryComments(storyId: string): Promise<(StoryComment & { author: User })[]>;
   createStoryComment(comment: InsertStoryComment): Promise<StoryComment>;
   incorporateComment(commentId: string, incorporatorFid: number): Promise<StorySegment | null>;
+  
+  // Enhanced story session management
+  endStorySession(storyId: string): Promise<Story | undefined>;
+  
+  // Enhanced comment operations
+  getStoryComment(commentId: string): Promise<StoryComment | undefined>;
+  approveAndIncorporateComment(commentId: string, approverFid: number): Promise<{ comment: StoryComment; segment: StorySegment }>;
+  declineComment(commentId: string): Promise<StoryComment | undefined>;
+  getPendingComments(storyId: string): Promise<(StoryComment & { author: User })[]>;
+  updateStorySharedCast(storyId: string, userFid: number, castHash: string): Promise<boolean>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -428,19 +438,32 @@ export class DatabaseStorage implements IStorage {
         storyId: storyComments.storyId,
         authorFid: storyComments.authorFid,
         content: storyComments.content,
+        approvalStatus: storyComments.approvalStatus,
         isIncorporated: storyComments.isIncorporated,
         incorporatedAt: storyComments.incorporatedAt,
         incorporatedByFid: storyComments.incorporatedByFid,
         castHash: storyComments.castHash,
+        sharedCastHash: storyComments.sharedCastHash,
+        notificationSent: storyComments.notificationSent,
         createdAt: storyComments.createdAt,
-        author: users
+        author: {
+          id: users.id,
+          fid: users.fid,
+          username: users.username,
+          displayName: users.displayName,
+          pfpUrl: users.pfpUrl,
+          followerCount: users.followerCount
+        }
       })
       .from(storyComments)
       .leftJoin(users, eq(storyComments.authorFid, users.fid))
       .where(eq(storyComments.storyId, storyId))
       .orderBy(desc(storyComments.createdAt));
 
-    return comments.map(c => ({ ...c, author: c.author! }));
+    return comments.map(comment => ({
+      ...comment,
+      author: comment.author as User
+    }));
   }
 
   async createStoryComment(insertComment: InsertStoryComment): Promise<StoryComment> {
@@ -448,55 +471,143 @@ export class DatabaseStorage implements IStorage {
       .insert(storyComments)
       .values(insertComment)
       .returning();
-    
+
     return comment;
   }
 
   async incorporateComment(commentId: string, incorporatorFid: number): Promise<StorySegment | null> {
-    try {
-      // Get the comment
-      const [comment] = await db
-        .select()
-        .from(storyComments)
-        .where(eq(storyComments.id, commentId));
-      
-      if (!comment || comment.isIncorporated) {
-        return null; // Comment not found or already incorporated
-      }
-
-      // Get the story to verify incorporator is the creator
-      const story = await this.getStory(comment.storyId);
-      if (!story || story.creatorFid !== incorporatorFid) {
-        return null; // Only story creator can incorporate comments
-      }
-
-      // Get next order index
-      const existingSegments = await this.getStorySegments(comment.storyId);
-      const nextOrderIndex = Math.max(0, ...existingSegments.map(s => s.orderIndex)) + 1;
-
-      // Create story segment from comment
-      const segment = await this.createStorySegment({
-        storyId: comment.storyId,
-        authorFid: comment.authorFid,
-        content: comment.content,
-        orderIndex: nextOrderIndex
-      });
-
-      // Mark comment as incorporated
-      await db
-        .update(storyComments)
-        .set({
-          isIncorporated: true,
-          incorporatedAt: new Date(),
-          incorporatedByFid: incorporatorFid
-        })
-        .where(eq(storyComments.id, commentId));
-
-      return segment;
-    } catch (error) {
-      console.warn("Error incorporating comment:", error);
+    const comment = await this.getStoryComment(commentId);
+    if (!comment || comment.isIncorporated) {
       return null;
     }
+
+    // Get current segment count for ordering
+    const segments = await this.getStorySegments(comment.storyId);
+    const orderIndex = segments.length + 1;
+
+    // Create story segment from comment
+    const segment = await this.createStorySegment({
+      storyId: comment.storyId,
+      authorFid: comment.authorFid,
+      content: comment.content,
+      orderIndex
+    });
+
+    // Mark comment as incorporated
+    await db
+      .update(storyComments)
+      .set({
+        isIncorporated: true,
+        incorporatedAt: new Date(),
+        incorporatedByFid: incorporatorFid
+      })
+      .where(eq(storyComments.id, commentId));
+
+    return segment;
+  }
+
+  // Enhanced story session management
+  async endStorySession(storyId: string): Promise<Story | undefined> {
+    const [updatedStory] = await db
+      .update(stories)
+      .set({
+        sessionStatus: "ended",
+        endedAt: new Date()
+      })
+      .where(eq(stories.id, storyId))
+      .returning();
+
+    return updatedStory;
+  }
+
+  // Enhanced comment operations
+  async getStoryComment(commentId: string): Promise<StoryComment | undefined> {
+    const [comment] = await db
+      .select()
+      .from(storyComments)
+      .where(eq(storyComments.id, commentId))
+      .limit(1);
+
+    return comment;
+  }
+
+  async approveAndIncorporateComment(commentId: string, approverFid: number): Promise<{ comment: StoryComment; segment: StorySegment }> {
+    // Update comment status
+    const [updatedComment] = await db
+      .update(storyComments)
+      .set({
+        approvalStatus: "approved"
+      })
+      .where(eq(storyComments.id, commentId))
+      .returning();
+
+    // Incorporate into story
+    const segment = await this.incorporateComment(commentId, approverFid);
+    if (!segment) {
+      throw new Error("Failed to incorporate comment");
+    }
+
+    return { comment: updatedComment, segment };
+  }
+
+  async declineComment(commentId: string): Promise<StoryComment | undefined> {
+    const [updatedComment] = await db
+      .update(storyComments)
+      .set({
+        approvalStatus: "declined"
+      })
+      .where(eq(storyComments.id, commentId))
+      .returning();
+
+    return updatedComment;
+  }
+
+  async getPendingComments(storyId: string): Promise<(StoryComment & { author: User })[]> {
+    const comments = await db
+      .select({
+        id: storyComments.id,
+        storyId: storyComments.storyId,
+        authorFid: storyComments.authorFid,
+        content: storyComments.content,
+        approvalStatus: storyComments.approvalStatus,
+        isIncorporated: storyComments.isIncorporated,
+        incorporatedAt: storyComments.incorporatedAt,
+        incorporatedByFid: storyComments.incorporatedByFid,
+        castHash: storyComments.castHash,
+        sharedCastHash: storyComments.sharedCastHash,
+        notificationSent: storyComments.notificationSent,
+        createdAt: storyComments.createdAt,
+        author: {
+          id: users.id,
+          fid: users.fid,
+          username: users.username,
+          displayName: users.displayName,
+          pfpUrl: users.pfpUrl,
+          followerCount: users.followerCount
+        }
+      })
+      .from(storyComments)
+      .leftJoin(users, eq(storyComments.authorFid, users.fid))
+      .where(and(
+        eq(storyComments.storyId, storyId),
+        eq(storyComments.approvalStatus, "pending")
+      ))
+      .orderBy(desc(storyComments.createdAt));
+
+    return comments.map(comment => ({
+      ...comment,
+      author: comment.author as User
+    }));
+  }
+
+  async updateStorySharedCast(storyId: string, userFid: number, castHash: string): Promise<boolean> {
+    const result = await db
+      .update(stories)
+      .set({ castHash })
+      .where(eq(stories.id, storyId))
+      .returning();
+
+    return result.length > 0;
   }
 }
 
