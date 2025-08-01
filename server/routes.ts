@@ -49,7 +49,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         "signature": "f+GecXW8N+jXAUiRrGn6m5FTMeTqr4HoAQyLrosM/VwZgdLrEWgdUtCNkdCNC5l8f6d6aETLBYPjGTGGt3rNMRw="
       },
       "miniapp": {
-        "version": "1",
+        "version": "1.0.0",
         "name": "Story Weaver",
         "description": "Collaborative storytelling where users co-create dynamic narratives",
         "iconUrl": "https://worthifyme.in/story-weaver-icon.png",
@@ -62,17 +62,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         "tagline": "Write together, create magic",
         "imageUrl": "https://worthifyme.in/story-weaver-promo.jpg",
         "heroImageUrl": "https://worthifyme.in/story-weaver-promo.jpg",
-        "noindex": false
-      },
-      "castAction": {
-        "name": "Story Weaver",
-        "icon": "pencil",
-        "description": "Transform this cast into a collaborative story seed",
-        "aboutUrl": "https://worthifyme.in/about",
-        "action": {
-          "type": "post",
-          "url": "https://worthifyme.in/api/cast-actions/weave-story"
-        }
+        "noindex": false,
+        "actions": [
+          {
+            "name": "Weave My Part",
+            "description": "Transform this cast into a collaborative story seed",
+            "url": "https://worthifyme.in/api/cast-actions/weave-story",
+            "context": ["cast"]
+          }
+        ]
       }
     };
     

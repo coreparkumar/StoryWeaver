@@ -43,6 +43,7 @@ Story Weaver is a collaborative storytelling platform built as a Farcaster Mini 
 - **SDK Ready Fix**: Fixed Farcaster SDK initialization to automatically call ready() after setup, preventing splash screen persistence
 - **SDK Authentication Update**: Enhanced Farcaster SDK implementation to match official documentation patterns with proper context handling and QuickAuth support
 - **Username Validation Fix**: Added fallback username generation to prevent 400 errors when user data is incomplete
+- **Manifest Actions Update**: Moved cast actions to proper actions array under miniapp with context: ["cast"] for universal cast action availability
 
 ## User Preferences
 
