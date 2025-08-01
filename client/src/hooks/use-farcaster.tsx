@@ -67,6 +67,10 @@ export function FarcasterProvider({ children }: { children: ReactNode }) {
           setUser(savedUser);
         }
       }
+
+      // Call ready() automatically after successful initialization
+      console.log("Farcaster SDK ready");
+      await farcasterSDK.actions.ready();
     } catch (err) {
       console.error("Failed to initialize Farcaster SDK:", err);
       setError(err instanceof Error ? err : new Error("Unknown error"));

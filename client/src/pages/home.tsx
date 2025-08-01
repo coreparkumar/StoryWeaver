@@ -10,12 +10,8 @@ export default function Home() {
   const { user, isLoading: fcLoading, ready } = useFarcaster();
   const { story, isLoading: storyLoading, error } = useStory("sample-story-id", user?.fid);
 
-  useEffect(() => {
-    // Call ready when component mounts and SDK is available
-    if (!fcLoading) {
-      ready();
-    }
-  }, [fcLoading, ready]);
+  // SDK ready() is now called automatically in the FarcasterProvider
+  // No need to call it manually in components
 
   if (fcLoading || storyLoading) {
     return (
