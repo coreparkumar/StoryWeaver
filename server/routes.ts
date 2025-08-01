@@ -48,30 +48,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
         "payload": "eyJkb21haW4iOiJ3b3J0aGlmeW1lLmluIn0",
         "signature": "f+GecXW8N+jXAUiRrGn6m5FTMeTqr4HoAQyLrosM/VwZgdLrEWgdUtCNkdCNC5l8f6d6aETLBYPjGTGGt3rNMRw="
       },
-      "miniapp": {
-        "version": "1.0.1",
+      "frame": {
+        "version": "1",
         "name": "Story Weaver",
-        "description": "Collaborative storytelling where users co-create dynamic narratives",
-        "iconUrl": "https://worthifyme.in/story-weaver-icon.png",
         "homeUrl": "https://worthifyme.in",
+        "iconUrl": "https://worthifyme.in/story-weaver-icon.png",
+        "imageUrl": "https://worthifyme.in/story-weaver-promo.jpg",
+        "buttonTitle": "🧙‍♂️ Start Weaving",
         "splashImageUrl": "https://worthifyme.in/story-weaver-promo.jpg",
         "splashBackgroundColor": "#8a63d2",
-        "webhookUrl": "https://worthifyme.in/api/webhooks/farcaster",
-        "castShareUrl": "https://worthifyme.in/cast-share",
-        "subtitle": "Collaborative stories",
-        "tagline": "Write together, create magic",
-        "imageUrl": "https://worthifyme.in/story-weaver-promo.jpg",
-        "heroImageUrl": "https://worthifyme.in/story-weaver-promo.jpg",
-        "noindex": false,
-        "actions": [
-          {
-            "name": "Weave My Part",
-            "description": "Transform this cast into a collaborative story seed",
-            "url": "https://worthifyme.in/api/cast-actions/weave-story",
-            "context": ["cast"]
-          }
-        ]
-      }
+        "webhookUrl": "https://worthifyme.in/api/webhooks/farcaster"
+      },
+      "triggers": [
+        {
+          "type": "cast",
+          "id": "weave-story",
+          "url": "https://worthifyme.in/api/cast-actions/weave-story",
+          "name": "Weave My Part"
+        }
+      ]
     };
     
     res.json(manifest);
