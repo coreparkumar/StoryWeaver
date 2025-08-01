@@ -786,7 +786,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const textStr = Array.isArray(text) ? text[0] : String(text || '');
     
     // Redirect to the main app with cast data
-    const redirectUrl = `https://worthifyme.in/?cast=${encodeURIComponent(castHashStr)}&text=${encodeURIComponent(textStr)}`;
+    const redirectUrl = `https://worthifyme.in/?cast=${encodeURIComponent(castHashStr.toString())}&text=${encodeURIComponent(textStr.toString())}`;
     
     res.redirect(redirectUrl);
   });
