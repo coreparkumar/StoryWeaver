@@ -694,27 +694,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Action handler route for Story Weaver - processes cast context and enables story weaving
   app.post("/api/cast-actions/weave-story", async (req, res) => {
     try {
-      // Parse cast context from Farcaster action
-      const { 
-        castHash, 
-        text: castText, 
-        fid: triggerFid, 
-        username,
-        timestamp,
-        parentHash,
-        authorFid 
-      } = req.body;
+      console.log("Raw Farcaster action request:", JSON.stringify(req.body, null, 2));
       
-      console.log("Story Weaver action triggered with context:", { 
-        castHash, castText, triggerFid, username, authorFid 
+      // Parse Farcaster action payload according to specification
+      const { untrustedData, trustedData } = req.body;
+      
+      // Handle both Farcaster spec format and direct test format
+      let triggerFid, castHash, castAuthorFid, timestamp;
+      
+      if (untrustedData) {
+        // Official Farcaster action format
+        triggerFid = untrustedData.fid;
+        timestamp = untrustedData.timestamp;
+        castHash = untrustedData.castId?.hash;
+        castAuthorFid = untrustedData.castId?.fid;
+      } else {
+        // Direct test format (backwards compatibility)
+        triggerFid = req.body.fid;
+        castHash = req.body.castHash;
+        castAuthorFid = req.body.authorFid;
+        timestamp = req.body.timestamp;
+      }
+      
+      console.log("Parsed action context:", { 
+        triggerFid, castHash, castAuthorFid, timestamp 
       });
       
       // Validate required cast context
-      if (!triggerFid || !castText || !castHash) {
+      if (!triggerFid || !castHash) {
         return res.status(400).json({ 
-          error: "Complete cast context required for story weaving" 
+          error: "Invalid Farcaster action: missing required context" 
         });
       }
+      
+      // For production, fetch cast details from Farcaster/Neynar API using castHash
+      // For now, use mock data to demonstrate the workflow
+      const castText = req.body.text || "A fascinating cast that sparked collaborative storytelling";
+      const username = req.body.username || `user${castAuthorFid || triggerFid}`;
       
       // Create collaborative story from seed cast
       const storyData = {
