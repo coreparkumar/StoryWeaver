@@ -40,25 +40,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
         "version": "1",
         "name": "Story Weaver",
         "description": "Collaborative storytelling where users co-create dynamic narratives",
-        "iconUrl": "https://story-chain-paaritoshkumar.replit.app/icon.svg",
-        "homeUrl": "https://story-chain-paaritoshkumar.replit.app",
-        "splashImageUrl": "https://story-chain-paaritoshkumar.replit.app/story-weaver-promo.jpg",
+        "iconUrl": "https://worthifyme.in/icon.svg",
+        "homeUrl": "https://worthifyme.in",
+        "splashImageUrl": "https://worthifyme.in/story-weaver-promo.jpg",
         "splashBackgroundColor": "#8a63d2",
-        "webhookUrl": "https://story-chain-paaritoshkumar.replit.app/api/webhooks/farcaster",
-        "castShareUrl": "https://story-chain-paaritoshkumar.replit.app/cast-share",
+        "webhookUrl": "https://worthifyme.in/api/webhooks/farcaster",
+        "castShareUrl": "https://worthifyme.in/cast-share",
         "subtitle": "Collaborative stories",
         "tagline": "Write together, create magic",
-        "imageUrl": "https://story-chain-paaritoshkumar.replit.app/story-weaver-promo.jpg",
-        "heroImageUrl": "https://story-chain-paaritoshkumar.replit.app/story-weaver-promo.jpg"
+        "imageUrl": "https://worthifyme.in/story-weaver-promo.jpg",
+        "heroImageUrl": "https://worthifyme.in/story-weaver-promo.jpg"
       },
       "castAction": {
         "name": "Story Weaver",
         "icon": "pencil",
         "description": "Transform this cast into a collaborative story seed",
-        "aboutUrl": "https://story-chain-paaritoshkumar.replit.app/about",
+        "aboutUrl": "https://worthifyme.in/about",
         "action": {
           "type": "post",
-          "url": "https://story-chain-paaritoshkumar.replit.app/api/cast-actions/weave-story"
+          "url": "https://worthifyme.in/api/cast-actions/weave-story"
         }
       }
     };
@@ -720,10 +720,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Owner triggered - auto-approve and create weaved cast
         return res.json({
           type: "frame",
-          frameUrl: `https://story-chain-paaritoshkumar.replit.app/story/${story.id}`,
+          frameUrl: `https://worthifyme.in/story/${story.id}`,
           cast: {
             text: `🧙‍♂️ Story Weaver: New collaborative story started!\n\n📖 From @${username}: "${castText.length > 120 ? castText.substring(0, 120) + "..." : castText}"\n\n✨ Join the weaving:`,
-            embeds: [`https://story-chain-paaritoshkumar.replit.app/story/${story.id}`],
+            embeds: [`https://worthifyme.in/story/${story.id}`],
             parent: castHash // Reply to original cast
           }
         });
@@ -732,10 +732,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // For now, auto-approve all weaves to demonstrate full workflow
         return res.json({
           type: "frame",
-          frameUrl: `https://story-chain-paaritoshkumar.replit.app/story/${story.id}`,
+          frameUrl: `https://worthifyme.in/story/${story.id}`,
           cast: {
             text: `🧙‍♂️ Story Weaver: New collaborative story started!\n\n📖 From @${username}: "${castText.length > 120 ? castText.substring(0, 120) + "..." : castText}"\n\n✨ Join the weaving:`,
-            embeds: [`https://story-chain-paaritoshkumar.replit.app/story/${story.id}`],
+            embeds: [`https://worthifyme.in/story/${story.id}`],
             parent: castHash // Reply to original cast
           }
         });
@@ -755,7 +755,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const { castHash, text } = req.query;
     
     // Redirect to the main app with cast data
-    const redirectUrl = `https://story-chain-paaritoshkumar.replit.app/?cast=${encodeURIComponent(castHash || '')}&text=${encodeURIComponent(text || '')}`;
+    const redirectUrl = `https://worthifyme.in/?cast=${encodeURIComponent(castHash || '')}&text=${encodeURIComponent(text || '')}`;
     
     res.redirect(redirectUrl);
   });
@@ -816,7 +816,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         </div>
         
         <p style="text-align: center; margin-top: 30px;">
-          <a href="https://story-chain-paaritoshkumar.replit.app" style="color: #8a63d2; text-decoration: none;">
+          <a href="https://worthifyme.in" style="color: #8a63d2; text-decoration: none;">
             🏠 Visit Story Weaver →
           </a>
         </p>

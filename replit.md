@@ -36,6 +36,7 @@ Story Weaver is a collaborative storytelling platform built as a Farcaster Mini 
 - **Promotional Assets**: Added atmospheric promotional image featuring magical storytelling theme for app marketing
 - **Manifest Enhancement**: Updated manifest with promotional imagery for splash screens and social sharing
 - **Cast Share URL**: Added missing castShareUrl property to Farcaster manifest for proper cast sharing functionality
+- **Domain Migration**: Updated all manifest URLs to use worthifyme.in domain with HTTPS for proper Farcaster integration
 - **Account Association Update**: Updated accountAssociation with new authentication credentials for worthifyme.in domain
 - **SDK Ready Fix**: Fixed Farcaster SDK initialization to automatically call ready() after setup, preventing splash screen persistence
 - **SDK Authentication Update**: Enhanced Farcaster SDK implementation to match official documentation patterns with proper context handling and QuickAuth support

@@ -8,16 +8,16 @@
     "version": "1",
     "name": "Story Weaver",
     "description": "Collaborative storytelling where users co-create dynamic narratives",
-    "iconUrl": "https://story-chain-paaritoshkumar.replit.app/icon.svg",
-    "homeUrl": "https://story-chain-paaritoshkumar.replit.app",
-    "splashImageUrl": "https://story-chain-paaritoshkumar.replit.app/story-weaver-promo.jpg",
+    "iconUrl": "https://worthifyme.in/icon.svg",
+    "homeUrl": "https://worthifyme.in",
+    "splashImageUrl": "https://worthifyme.in/story-weaver-promo.jpg",
     "splashBackgroundColor": "#8a63d2",
-    "webhookUrl": "https://story-chain-paaritoshkumar.replit.app/api/webhooks/farcaster",
+    "webhookUrl": "https://worthifyme.in/api/webhooks/farcaster",
     "primaryCategory":"social",
-    "castShareUrl": "https://story-chain-paaritoshkumar.replit.app/cast-share",
+    "castShareUrl": "https://worthifyme.in/cast-share",
     "subtitle": "Be Creative ! Be Funny ! Be Authentic!",
     "tagline": "Write together, create magic",
-    "imageUrl": "https://story-chain-paaritoshkumar.replit.app/story-weaver-promo.jpg",
-    "heroImageUrl": "https://story-chain-paaritoshkumar.replit.app/story-weaver-promo.jpg"
+    "imageUrl": "https://worthifyme.in/story-weaver-promo.jpg",
+    "heroImageUrl": "https://worthifyme.in/story-weaver-promo.jpg"
   }
 }
