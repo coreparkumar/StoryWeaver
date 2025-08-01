@@ -52,13 +52,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         "heroImageUrl": "https://story-chain-paaritoshkumar.replit.app/story-weaver-promo.jpg"
       },
       "castAction": {
-        "name": "Add to Story",
+        "name": "Story Weaver",
         "icon": "pencil",
-        "description": "Turn this cast into a collaborative story",
+        "description": "Transform this cast into a collaborative story seed",
         "aboutUrl": "https://story-chain-paaritoshkumar.replit.app/about",
         "action": {
           "type": "post",
-          "url": "https://story-chain-paaritoshkumar.replit.app/api/cast-actions/create-story"
+          "url": "https://story-chain-paaritoshkumar.replit.app/api/cast-actions/weave-story"
         }
       }
     };
@@ -680,38 +680,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Cast action endpoint for creating stories from shared casts
-  app.post("/api/cast-actions/create-story", async (req, res) => {
+  // Cast action endpoint for Story Weaver pattern - seed cast to collaborative story
+  app.post("/api/cast-actions/weave-story", async (req, res) => {
     try {
-      const { castHash, castText, castAuthor } = req.body;
+      const { castHash, text: castText, fid: triggerFid, username } = req.body;
       
-      console.log("Cast action received:", { castHash, castText, castAuthor });
+      console.log("Story Weaver action triggered:", { castHash, castText, triggerFid, username });
       
-      // Verify this is the miniapp owner
-      if (castAuthor?.fid !== 977521) {
-        return res.status(403).json({ 
-          error: "Only the Story Weaver owner can create stories from casts." 
+      // Allow any user to trigger Story Weaver action
+      if (!triggerFid || !castText) {
+        return res.status(400).json({ 
+          error: "Cast data is required to weave a story." 
         });
       }
       
-      // Create a new story from the shared cast
+      // Create a new collaborative story from the seed cast
       const storyData = {
-        creatorFid: castAuthor.fid,
-        title: castText.length > 50 ? castText.substring(0, 50) + "..." : castText,
-        initialContent: castText,
+        creatorFid: 977521, // Stories created by Story Weaver owner
+        title: `Weaved from @${username}'s cast`,
+        initialContent: `🌟 Story seed from @${username}:\n\n"${castText}"\n\n✨ Continue this story by liking and commenting below! Each contribution becomes part of our collaborative narrative.`,
         originalCastHash: castHash
       };
       
       const story = await storage.createStory(storyData);
       
-      res.json({ 
-        message: "Story created successfully from your cast!",
-        storyId: story.id,
-        storyUrl: `https://story-chain-paaritoshkumar.replit.app/story/${story.id}`
+      // Prepare the weaved cast content
+      const weavedCastText = `🧙‍♂️ Story Weaver has transformed @${username}'s cast into a collaborative story!\n\n📖 "${castText.length > 100 ? castText.substring(0, 100) + "..." : castText}"\n\n✨ Join the story: ${story.id}\n\nLike & comment to contribute! 🪄`;
+      
+      // Return cast action response with weaved cast
+      res.json({
+        type: "message",
+        message: `🧙‍♂️ Story Weaver has transformed your cast into a collaborative story! View it at: https://story-chain-paaritoshkumar.replit.app/story/${story.id}`
       });
     } catch (error) {
-      console.error("Error creating story from cast action:", error);
-      res.status(500).json({ error: "Failed to create story from cast" });
+      console.error("Error weaving story from cast action:", error);
+      res.status(500).json({ 
+        error: "Failed to weave story from cast",
+        details: error instanceof Error ? error.message : "Unknown error"
+      });
     }
   });
 
