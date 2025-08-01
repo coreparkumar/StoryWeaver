@@ -49,7 +49,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         "subtitle": "Collaborative stories",
         "tagline": "Write together, create magic",
         "imageUrl": "https://worthifyme.in/story-weaver-promo.jpg",
-        "heroImageUrl": "https://worthifyme.in/story-weaver-promo.jpg"
+        "heroImageUrl": "https://worthifyme.in/story-weaver-promo.jpg",
+        "noindex": false
       },
       "castAction": {
         "name": "Story Weaver",
