@@ -32,9 +32,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     // Official schema-compliant manifest
     const manifest = {
       "accountAssociation": {
-        "header": "eyJhbGciOiJlZDI1NTE5IiwidHlwIjoiSldUIn0",
-        "payload": "eyJmaWQiOjk3NzUyMSwiZG9tYWluIjoiaHR0cHM6Ly9zdG9yeS1jaGFpbi1wYWFyaXRvc2hrdW1hci5yZXBsaXQuYXBwIn0",
-        "signature": "5khuFVcFMS_I8b-y4ukguKGkLEbMADDf1PHqePMrDnFFbqJqXiX9VZdEkgPaNgiUcwj60wmDMnr_-KRXYRc9AA"
+        "header": "eyJmaWQiOjk3NzUyMSwidHlwZSI6ImF1dGgiLCJrZXkiOiIweDhjQTBjMmI0MTgxMTc5MEQ5OTc1MTIyQkMzOTQ0OTZjRDgwQmI3MkQifQ",
+        "payload": "eyJkb21haW4iOiJ3b3J0aGlmeW1lLmluIn0",
+        "signature": "f+GecXW8N+jXAUiRrGn6m5FTMeTqr4HoAQyLrosM/VwZgdLrEWgdUtCNkdCNC5l8f6d6aETLBYPjGTGGt3rNMRw="
       },
       "miniapp": {
         "version": "1",
