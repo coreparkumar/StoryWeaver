@@ -4,7 +4,7 @@
     "payload": "eyJkb21haW4iOiJ3b3J0aGlmeW1lLmluIn0",
     "signature": "f+GecXW8N+jXAUiRrGn6m5FTMeTqr4HoAQyLrosM/VwZgdLrEWgdUtCNkdCNC5l8f6d6aETLBYPjGTGGt3rNMRw="
   },
-  "frame": {
+  "miniapp": {
     "version": "1",
     "name": "Story Weaver",
     "description": "Collaborative storytelling where users co-create dynamic narratives",
