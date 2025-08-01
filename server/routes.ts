@@ -49,7 +49,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         "signature": "f+GecXW8N+jXAUiRrGn6m5FTMeTqr4HoAQyLrosM/VwZgdLrEWgdUtCNkdCNC5l8f6d6aETLBYPjGTGGt3rNMRw="
       },
       "miniapp": {
-        "version": "1.0.0",
+        "version": "1.0.1",
         "name": "Story Weaver",
         "description": "Collaborative storytelling where users co-create dynamic narratives",
         "iconUrl": "https://worthifyme.in/story-weaver-icon.png",
