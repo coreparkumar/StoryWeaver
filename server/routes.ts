@@ -593,6 +593,77 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Cast-based collaborative workflow endpoints
+  app.post("/api/stories/:id/cast-comment", async (req, res) => {
+    const { id: storyId } = req.params;
+    const { commentCastHash, authorFid, content } = req.body;
+    
+    try {
+      const comment = await storage.addCastComment({
+        storyId,
+        commentCastHash,
+        authorFid,
+        content
+      });
+      res.json(comment);
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  });
+
+  app.get("/api/stories/:id/cast-comments", async (req, res) => {
+    const { id: storyId } = req.params;
+    const { status = "pending" } = req.query;
+    
+    const comments = await storage.getCastComments(storyId, status as string);
+    res.json(comments);
+  });
+
+  app.post("/api/cast-comments/:id/approve", async (req, res) => {
+    const { id: commentId } = req.params;
+    const { userFid, weaveCastHash } = req.body;
+    
+    try {
+      const result = await storage.approveCastComment(commentId, userFid, weaveCastHash);
+      if (!result) {
+        return res.status(404).json({ error: "Comment not found or unauthorized" });
+      }
+      res.json(result);
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  });
+
+  app.post("/api/cast-comments/:id/decline", async (req, res) => {
+    const { id: commentId } = req.params;
+    const { userFid } = req.body;
+    
+    try {
+      const success = await storage.declineCastComment(commentId, userFid);
+      if (!success) {
+        return res.status(404).json({ error: "Comment not found or unauthorized" });
+      }
+      res.json({ message: "Comment declined" });
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  });
+
+  app.post("/api/stories/:id/weave-cast", async (req, res) => {
+    const { id: storyId } = req.params;
+    const { castHash, userFid } = req.body;
+    
+    try {
+      const success = await storage.updateLatestWeaveCast(storyId, castHash, userFid);
+      if (!success) {
+        return res.status(404).json({ error: "Story not found or unauthorized" });
+      }
+      res.json({ message: "Weave cast updated successfully" });
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

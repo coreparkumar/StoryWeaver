@@ -17,12 +17,14 @@ export const stories = pgTable("stories", {
   creatorFid: integer("creator_fid").notNull(),
   title: text("title").notNull(),
   initialContent: text("initial_content").notNull(),
-  castHash: text("cast_hash"),
+  originalCastHash: text("original_cast_hash"), // Hash of the original Farcaster cast that started the story
+  latestWeaveCastHash: text("latest_weave_cast_hash"), // Hash of the most recent weave cast
   sessionStatus: text("session_status").notNull().default("active"), // "active" | "ended"
   likeCount: integer("like_count").default(0),
   recastCount: integer("recast_count").default(0),
   contributorCount: integer("contributor_count").default(1),
   maxContributions: integer("max_contributions").default(10), // Optional limit
+  weaveCastCount: integer("weave_cast_count").default(0), // Number of weave casts posted
   endedAt: timestamp("ended_at"),
   createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
   updatedAt: timestamp("updated_at").default(sql`CURRENT_TIMESTAMP`),
@@ -51,6 +53,19 @@ export const storyLocks = pgTable("story_locks", {
   lockedByFid: integer("locked_by_fid").notNull(),
   lockedAt: timestamp("locked_at").default(sql`CURRENT_TIMESTAMP`),
   expiresAt: timestamp("expires_at").notNull(),
+});
+
+// Track Farcaster cast comments for story weaving
+export const castComments = pgTable("cast_comments", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  storyId: varchar("story_id").notNull(),
+  commentCastHash: text("comment_cast_hash").notNull().unique(), // Hash of the comment cast
+  authorFid: integer("author_fid").notNull(),
+  content: text("content").notNull(),
+  approvalStatus: text("approval_status").notNull().default("pending"), // "pending" | "approved" | "declined"
+  incorporatedAt: timestamp("incorporated_at"), // When comment was woven into story
+  incorporatedInCastHash: text("incorporated_in_cast_hash"), // Hash of the weave cast that included this comment
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
 });
 
 export const storyComments = pgTable("story_comments", {
@@ -127,6 +142,16 @@ export type InsertStoryLike = z.infer<typeof insertStoryLikeSchema>;
 
 export type StoryComment = typeof storyComments.$inferSelect;
 export type InsertStoryComment = z.infer<typeof insertStoryCommentSchema>;
+
+export type CastComment = typeof castComments.$inferSelect;
+export const insertCastCommentSchema = createInsertSchema(castComments).omit({
+  id: true,
+  approvalStatus: true,
+  incorporatedAt: true,
+  incorporatedInCastHash: true,
+  createdAt: true,
+});
+export type InsertCastComment = z.infer<typeof insertCastCommentSchema>;
 
 // Extended types for frontend
 export type StoryWithContributors = Story & {

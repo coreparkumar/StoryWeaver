@@ -11,13 +11,16 @@ import {
   type InsertStoryLock,
   type StoryComment,
   type InsertStoryComment,
+  type CastComment,
+  type InsertCastComment,
   type StoryWithContributors,
   users,
   stories,
   storySegments,
   storyLikes,
   storyLocks,
-  storyComments
+  storyComments,
+  castComments
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, sql, count, lt } from "drizzle-orm";
@@ -603,11 +606,150 @@ export class DatabaseStorage implements IStorage {
   async updateStorySharedCast(storyId: string, userFid: number, castHash: string): Promise<boolean> {
     const result = await db
       .update(stories)
-      .set({ castHash })
+      .set({ originalCastHash: castHash })
       .where(eq(stories.id, storyId))
       .returning();
 
     return result.length > 0;
+  }
+
+  // Cast-based collaborative workflow methods
+  async addCastComment(data: any): Promise<any> {
+    const [comment] = await db
+      .insert(castComments)
+      .values(data)
+      .returning();
+
+    return comment;
+  }
+
+  async getCastComments(storyId: string, status: string = "pending"): Promise<any[]> {
+    const comments = await db
+      .select({
+        id: castComments.id,
+        storyId: castComments.storyId,
+        commentCastHash: castComments.commentCastHash,
+        authorFid: castComments.authorFid,
+        content: castComments.content,
+        approvalStatus: castComments.approvalStatus,
+        incorporatedAt: castComments.incorporatedAt,
+        incorporatedInCastHash: castComments.incorporatedInCastHash,
+        createdAt: castComments.createdAt,
+        author: {
+          id: users.id,
+          fid: users.fid,
+          username: users.username,
+          displayName: users.displayName,
+          pfpUrl: users.pfpUrl,
+          followerCount: users.followerCount
+        }
+      })
+      .from(castComments)
+      .leftJoin(users, eq(castComments.authorFid, users.fid))
+      .where(and(
+        eq(castComments.storyId, storyId),
+        eq(castComments.approvalStatus, status)
+      ))
+      .orderBy(desc(castComments.createdAt));
+
+    return comments.map(comment => ({
+      ...comment,
+      author: comment.author as User
+    }));
+  }
+
+  async approveCastComment(commentId: string, userFid: number, weaveCastHash: string): Promise<any | null> {
+    try {
+      // First verify the user owns the story
+      const comment = await db
+        .select({
+          castComment: castComments,
+          story: stories
+        })
+        .from(castComments)
+        .leftJoin(stories, eq(castComments.storyId, stories.id))
+        .where(eq(castComments.id, commentId))
+        .limit(1);
+
+      if (!comment[0] || comment[0].story.creatorFid !== userFid) {
+        return null;
+      }
+
+      // Update comment to approved
+      const [updatedComment] = await db
+        .update(castComments)
+        .set({
+          approvalStatus: "approved",
+          incorporatedAt: new Date(),
+          incorporatedInCastHash: weaveCastHash
+        })
+        .where(eq(castComments.id, commentId))
+        .returning();
+
+      // Update weave cast count
+      await db
+        .update(stories)
+        .set({
+          latestWeaveCastHash: weaveCastHash,
+          weaveCastCount: sql`${stories.weaveCastCount} + 1`
+        })
+        .where(eq(stories.id, comment[0].castComment.storyId));
+
+      return updatedComment;
+    } catch (error) {
+      console.warn("Error approving cast comment:", error);
+      return null;
+    }
+  }
+
+  async declineCastComment(commentId: string, userFid: number): Promise<boolean> {
+    try {
+      // First verify the user owns the story
+      const comment = await db
+        .select({
+          castComment: castComments,
+          story: stories
+        })
+        .from(castComments)
+        .leftJoin(stories, eq(castComments.storyId, stories.id))
+        .where(eq(castComments.id, commentId))
+        .limit(1);
+
+      if (!comment[0] || comment[0].story.creatorFid !== userFid) {
+        return false;
+      }
+
+      // Update comment to declined
+      await db
+        .update(castComments)
+        .set({ approvalStatus: "declined" })
+        .where(eq(castComments.id, commentId));
+
+      return true;
+    } catch (error) {
+      console.warn("Error declining cast comment:", error);
+      return false;
+    }
+  }
+
+  async updateLatestWeaveCast(storyId: string, castHash: string, userFid: number): Promise<boolean> {
+    try {
+      // Verify user owns the story
+      const story = await this.getStory(storyId);
+      if (!story || story.creatorFid !== userFid) {
+        return false;
+      }
+
+      await db
+        .update(stories)
+        .set({ latestWeaveCastHash: castHash })
+        .where(eq(stories.id, storyId));
+
+      return true;
+    } catch (error) {
+      console.warn("Error updating weave cast:", error);
+      return false;
+    }
   }
 }
 
