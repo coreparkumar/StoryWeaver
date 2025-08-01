@@ -3,7 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { insertStorySegmentSchema, insertStoryLikeSchema, insertUserSchema, insertStorySchema, insertStoryCommentSchema } from "@shared/schema";
 import { z } from "zod";
-import { generalRateLimit, storyCreationRateLimit, contributionRateLimit } from "./middleware/rate-limiter";
+import { generalRateLimit, contributionRateLimit } from "./middleware/rate-limiter";
 import path from "path";
 import fs from "fs";
 
@@ -121,7 +121,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Create new story (restricted)
-  app.post("/api/stories", storyCreationRateLimit, async (req, res) => {
+  app.post("/api/stories", async (req, res) => {
     try {
       const AUTHORIZED_FID = 977521; // Your Farcaster FID
       const { creatorFid } = req.body;

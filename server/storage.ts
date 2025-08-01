@@ -113,22 +113,20 @@ export class DatabaseStorage implements IStorage {
         creatorFid: 1,
         title: "Digital Magic Adventures",
         initialContent: "Once upon a time, in a world where digital realms collided with ancient magic, there lived a young programmer named Zara who discovered that her late-night coding sessions were actually casting spells...",
-        castHash: "0x6932a9256f34e18892d498abb6d00ccf9f1c50d6"
+        originalCastHash: "0x6932a9256f34e18892d498abb6d00ccf9f1c50d6"
       });
 
       // Create sample segments
       await this.createStorySegment({
         storyId: story.id,
         authorFid: 2,
-        content: "Each line of code she wrote began to glow with ethereal light, and her computer screen became a portal to dimensions unknown. The debugging process took on a whole new meaning when the bugs were actually tiny magical creatures causing mischief in her programs.",
-        orderIndex: 1
+        content: "Each line of code she wrote began to glow with ethereal light, and her computer screen became a portal to dimensions unknown. The debugging process took on a whole new meaning when the bugs were actually tiny magical creatures causing mischief in her programs."
       });
 
       await this.createStorySegment({
         storyId: story.id,
         authorFid: 3,
-        content: "As Zara's fingers danced across the keyboard, she realized that the ancient tome of programming languages she'd inherited from her grandmother wasn't just a reference book—it was a spellbook. Every function call was an incantation, every variable declaration a binding ritual.",
-        orderIndex: 2
+        content: "As Zara's fingers danced across the keyboard, she realized that the ancient tome of programming languages she'd inherited from her grandmother wasn't just a reference book—it was a spellbook. Every function call was an incantation, every variable declaration a binding ritual."
       });
 
       // Create sample likes
