@@ -29,7 +29,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
     
-    // Official schema-compliant manifest
+    // Official schema-compliant manifest with cast actions
     const manifest = {
       "accountAssociation": {
         "header": "eyJmaWQiOjk3NzUyMSwidHlwZSI6ImF1dGgiLCJrZXkiOiIweDhjQTBjMmI0MTgxMTc5MEQ5OTc1MTIyQkMzOTQ0OTZjRDgwQmI3MkQifQ",
@@ -45,11 +45,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
         "splashImageUrl": "https://story-chain-paaritoshkumar.replit.app/story-weaver-promo.jpg",
         "splashBackgroundColor": "#8a63d2",
         "webhookUrl": "https://story-chain-paaritoshkumar.replit.app/api/webhooks/farcaster",
-        "castShareUrl": "https://story-chain-paaritoshkumar.replit.app",
+        "castShareUrl": "https://story-chain-paaritoshkumar.replit.app/cast-share",
         "subtitle": "Collaborative stories",
         "tagline": "Write together, create magic",
         "imageUrl": "https://story-chain-paaritoshkumar.replit.app/story-weaver-promo.jpg",
         "heroImageUrl": "https://story-chain-paaritoshkumar.replit.app/story-weaver-promo.jpg"
+      },
+      "castAction": {
+        "name": "Add to Story",
+        "icon": "pencil",
+        "description": "Turn this cast into a collaborative story",
+        "aboutUrl": "https://story-chain-paaritoshkumar.replit.app/about",
+        "action": {
+          "type": "post",
+          "url": "https://story-chain-paaritoshkumar.replit.app/api/cast-actions/create-story"
+        }
       }
     };
     
@@ -668,6 +678,51 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error: any) {
       res.status(400).json({ error: error.message });
     }
+  });
+
+  // Cast action endpoint for creating stories from shared casts
+  app.post("/api/cast-actions/create-story", async (req, res) => {
+    try {
+      const { castHash, castText, castAuthor } = req.body;
+      
+      console.log("Cast action received:", { castHash, castText, castAuthor });
+      
+      // Verify this is the miniapp owner
+      if (castAuthor?.fid !== 977521) {
+        return res.status(403).json({ 
+          error: "Only the Story Weaver owner can create stories from casts." 
+        });
+      }
+      
+      // Create a new story from the shared cast
+      const storyData = {
+        creatorFid: castAuthor.fid,
+        title: castText.length > 50 ? castText.substring(0, 50) + "..." : castText,
+        initialContent: castText,
+        originalCastHash: castHash
+      };
+      
+      const story = await storage.createStory(storyData);
+      
+      res.json({ 
+        message: "Story created successfully from your cast!",
+        storyId: story.id,
+        storyUrl: `https://story-chain-paaritoshkumar.replit.app/story/${story.id}`
+      });
+    } catch (error) {
+      console.error("Error creating story from cast action:", error);
+      res.status(500).json({ error: "Failed to create story from cast" });
+    }
+  });
+
+  // Cast share handler for when users select the miniapp
+  app.get("/cast-share", (req, res) => {
+    const { castHash, text } = req.query;
+    
+    // Redirect to the main app with cast data
+    const redirectUrl = `https://story-chain-paaritoshkumar.replit.app/?cast=${encodeURIComponent(castHash || '')}&text=${encodeURIComponent(text || '')}`;
+    
+    res.redirect(redirectUrl);
   });
 
   const httpServer = createServer(app);

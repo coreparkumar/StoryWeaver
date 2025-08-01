@@ -13,6 +13,11 @@ import promoImage from "../assets/story-weaver-promo.jpg";
 export default function Home() {
   const { user, isLoading: fcLoading } = useFarcaster();
   
+  // Check for cast share parameters
+  const urlParams = new URLSearchParams(window.location.search);
+  const sharedCastHash = urlParams.get('cast');
+  const sharedCastText = urlParams.get('text');
+  
   // Fetch all stories
   const { data: stories = [], isLoading: storiesLoading, error } = useQuery({
     queryKey: ['/api/stories'],
@@ -37,7 +42,9 @@ export default function Home() {
               <Loader2 className="h-8 w-8 animate-spin text-fc-purple" />
               <div className="text-center">
                 <h2 className="text-lg font-semibold text-gray-900">Loading Story Weaver</h2>
-                <p className="text-sm text-gray-600">Connecting to Farcaster...</p>
+                <p className="text-sm text-gray-600">
+                  {sharedCastHash ? "Creating story from your cast..." : "Connecting to Farcaster..."}
+                </p>
               </div>
             </div>
           </CardContent>
