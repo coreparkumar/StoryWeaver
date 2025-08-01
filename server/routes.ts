@@ -45,6 +45,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         "splashImageUrl": "https://story-chain-paaritoshkumar.replit.app/story-weaver-promo.jpg",
         "splashBackgroundColor": "#8a63d2",
         "webhookUrl": "https://story-chain-paaritoshkumar.replit.app/api/webhooks/farcaster",
+        "castShareUrl": "https://story-chain-paaritoshkumar.replit.app",
         "subtitle": "Collaborative stories",
         "tagline": "Write together, create magic",
         "imageUrl": "https://story-chain-paaritoshkumar.replit.app/story-weaver-promo.jpg",
