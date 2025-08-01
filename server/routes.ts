@@ -120,16 +120,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Create new story (restricted)
+  // Create new story (open to all users)
   app.post("/api/stories", async (req, res) => {
     try {
-      const AUTHORIZED_FID = 977521; // Your Farcaster FID
       const { creatorFid } = req.body;
 
-      // Only allow authorized users to create stories
-      if (creatorFid !== AUTHORIZED_FID) {
-        return res.status(403).json({ 
-          error: "Story creation is restricted. Please share warps with the story creator to enable new stories." 
+      // Allow any authenticated user to create stories
+      if (!creatorFid) {
+        return res.status(400).json({ 
+          error: "Creator FID is required to create a story." 
         });
       }
 
