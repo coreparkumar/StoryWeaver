@@ -6,6 +6,8 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { FarcasterProvider } from "@/hooks/use-farcaster";
 import Home from "@/pages/home";
 import StoryPage from "@/pages/story";
+import InstallAction from "@/pages/install-action";
+import About from "@/pages/about";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -13,6 +15,8 @@ function Router() {
     <Switch>
       <Route path="/" component={Home} />
       <Route path="/story/:id" component={StoryPage} />
+      <Route path="/install-action" component={InstallAction} />
+      <Route path="/about" component={About} />
       <Route component={NotFound} />
     </Switch>
   );

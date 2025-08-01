@@ -72,6 +72,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json(manifest);
   });
 
+  // Cast Action Installation Endpoint
+  app.get("/api/cast-actions", (req, res) => {
+    res.setHeader('Content-Type', 'application/json');
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    
+    res.json({
+      "actions": [
+        {
+          "name": "Weave My Part",
+          "icon": "magic-wand",
+          "description": "Transform this cast into a collaborative story seed",
+          "aboutUrl": "https://worthifyme.in/about",
+          "action": {
+            "type": "post",
+            "url": "https://worthifyme.in/api/cast-actions/weave-story"
+          }
+        }
+      ]
+    });
+  });
+
   // Farcaster webhook endpoint
   app.post("/api/webhooks/farcaster", async (req, res) => {
     try {

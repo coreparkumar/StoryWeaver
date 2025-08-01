@@ -7,6 +7,10 @@ Story Weaver is a collaborative storytelling platform built as a Farcaster Mini 
 ## Recent Changes
 
 **January 31, 2025**
+- **Cast Action Installation System**: Added proper Cast Action installation endpoint at `/api/cast-actions` for users to install "Weave My Part" action
+- **Installation Page**: Created dedicated `/install-action` page with user-friendly installation flow and clear instructions
+- **About Page**: Added comprehensive `/about` page explaining Story Weaver workflow and cast action functionality
+- **Action Discovery Fix**: Resolved missing cast action buttons by implementing proper Farcaster Action installation format alongside V2 Mini App triggers
 - **Farcaster V2 Manifest Compliance**: Fixed manifest to comply with official Farcaster Frames V2/Mini Apps specification
 - **Version Format Fix**: Changed from semantic versioning "1.0.1" to spec-compliant version "1"
 - **Structure Correction**: Updated manifest from "miniapp" to "frame" with proper "triggers" array format

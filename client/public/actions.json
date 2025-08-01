@@ -1,0 +1,14 @@
+{
+  "actions": [
+    {
+      "name": "Weave My Part",
+      "icon": "magic-wand",
+      "description": "Transform this cast into a collaborative story seed",
+      "aboutUrl": "https://worthifyme.in/about",
+      "action": {
+        "type": "post",
+        "url": "https://worthifyme.in/api/cast-actions/weave-story"
+      }
+    }
+  ]
+}
