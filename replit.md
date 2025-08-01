@@ -24,6 +24,8 @@ Story Weaver is a collaborative storytelling platform built as a Farcaster Mini 
 - **Authentic Farcaster Manifest**: Generated proper accountAssociation signature using FID 977521 private key for domain verification
 - **Character Limits**: Set 280-character limit per story contribution (roughly 40-60 words)
 - **Production Ready**: Application now supports persistent data storage and authentic Farcaster integration for deployment
+- **Promotional Assets**: Added atmospheric promotional image featuring magical storytelling theme for app marketing
+- **Manifest Enhancement**: Updated manifest with promotional imagery for splash screens and social sharing
 
 ## User Preferences
 

@@ -4,6 +4,7 @@ import { useStory } from "@/hooks/use-story";
 import StoryCard from "@/components/story-card";
 import { Card, CardContent } from "@/components/ui/card";
 import { Loader2 } from "lucide-react";
+import promoImage from "../assets/story-weaver-promo.jpg";
 
 export default function Home() {
   const { user, isLoading: fcLoading, ready } = useFarcaster();
@@ -82,6 +83,21 @@ export default function Home() {
           </div>
         </div>
       </header>
+
+      {/* Promotional Banner */}
+      <div className="relative h-48 overflow-hidden">
+        <img 
+          src={promoImage} 
+          alt="Story Weaver - Collaborative Storytelling" 
+          className="w-full h-full object-cover"
+        />
+        <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center">
+          <div className="text-center text-white">
+            <h2 className="text-3xl font-bold mb-2">Story Weaver</h2>
+            <p className="text-lg">Write together, create magic</p>
+          </div>
+        </div>
+      </div>
 
       {/* Main Content */}
       <main className="max-w-2xl mx-auto px-4 py-6">

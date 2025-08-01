@@ -4,10 +4,24 @@ import { storage } from "./storage";
 import { insertStorySegmentSchema, insertStoryLikeSchema, insertUserSchema, insertStorySchema, insertStoryCommentSchema } from "@shared/schema";
 import { z } from "zod";
 import { generalRateLimit, storyCreationRateLimit, contributionRateLimit } from "./middleware/rate-limiter";
+import path from "path";
+import fs from "fs";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Apply general rate limiting to all routes
   app.use(generalRateLimit);
+  
+  // Serve promotional image with proper headers
+  app.get("/story-weaver-promo.jpg", (req, res) => {
+    const imagePath = path.resolve(import.meta.dirname, "..", "client", "public", "story-weaver-promo.jpg");
+    if (fs.existsSync(imagePath)) {
+      res.setHeader('Content-Type', 'image/jpeg');
+      res.setHeader('Cache-Control', 'public, max-age=86400');
+      res.sendFile(imagePath);
+    } else {
+      res.status(404).json({ error: "Image not found" });
+    }
+  });
   
   // Serve Farcaster manifest with proper headers
   app.get("/.well-known/farcaster.json", (req, res) => {
@@ -28,11 +42,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         "description": "Collaborative storytelling where users co-create dynamic narratives",
         "iconUrl": "https://story-chain-paaritoshkumar.replit.app/icon.svg",
         "homeUrl": "https://story-chain-paaritoshkumar.replit.app",
-        "splashImageUrl": "https://story-chain-paaritoshkumar.replit.app/icon.svg",
+        "splashImageUrl": "https://story-chain-paaritoshkumar.replit.app/story-weaver-promo.jpg",
         "splashBackgroundColor": "#8a63d2",
         "webhookUrl": "https://story-chain-paaritoshkumar.replit.app/api/webhooks/farcaster",
         "subtitle": "Collaborative stories",
-        "tagline": "Write together, create magic"
+        "tagline": "Write together, create magic",
+        "imageUrl": "https://story-chain-paaritoshkumar.replit.app/story-weaver-promo.jpg",
+        "heroImageUrl": "https://story-chain-paaritoshkumar.replit.app/story-weaver-promo.jpg"
       }
     };
     
