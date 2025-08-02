@@ -98,10 +98,13 @@ These documents help stakeholders understand the technical implementation withou
 
 ### Recent Implementation Updates
 
-**August 2, 2025 - Cast Action Integration Complete**
-- Fixed Creator Dashboard API endpoints to properly display pending comments for approval
+**August 2, 2025 - Cast Stories Dashboard & Database Documentation Complete**
+- Created comprehensive "Stories from Cast Actions" tabular dashboard with professional table layout
+- Added action buttons to close, approve, and remove each story with confirmation dialogs  
+- Implemented cast stories API endpoints with proper owner authentication (FID 977521)
+- Dashboard displays cast hash, comment count, status, creation time, and management actions
+- Fixed database cleanup script to properly clear all data while preserving user profiles
+- Added comprehensive database documentation including schema, dictionary, and technical reports
 - Enhanced cast action workflow: non-owner users can now contribute to existing stories via "Weave My Part" action
-- When users use the cast action on existing story casts, their contributions are stored as pending comments requiring creator approval
-- Added comprehensive troubleshooting documentation for browser network errors (normal Farcaster SDK behavior)
 - System now captures cast details from user actions and stores them in database for dashboard review
 - Both story_comments and cast_comments tables populate with pending contributions awaiting approval
