@@ -258,7 +258,7 @@ export class DatabaseStorage implements IStorage {
       .orderBy(storySegments.orderIndex);
   }
 
-  async createStorySegment(insertSegment: InsertStorySegment): Promise<StorySegment> {
+  async createStorySegment(insertSegment: InsertStorySegment & { orderIndex: number }): Promise<StorySegment> {
     const [segment] = await db
       .insert(storySegments)
       .values(insertSegment)
@@ -669,7 +669,7 @@ export class DatabaseStorage implements IStorage {
         .where(eq(castComments.id, commentId))
         .limit(1);
 
-      if (!comment[0] || comment[0].story.creatorFid !== userFid) {
+      if (!comment[0] || !comment[0].story || comment[0].story.creatorFid !== userFid) {
         return null;
       }
 
@@ -713,7 +713,7 @@ export class DatabaseStorage implements IStorage {
         .where(eq(castComments.id, commentId))
         .limit(1);
 
-      if (!comment[0] || comment[0].story.creatorFid !== userFid) {
+      if (!comment[0] || !comment[0].story || comment[0].story.creatorFid !== userFid) {
         return false;
       }
 

@@ -1,3 +1,20 @@
+/**
+ * Database Schema for Story Weaver
+ * 
+ * This file defines the PostgreSQL database schema using Drizzle ORM.
+ * It includes all tables, relationships, and TypeScript types for the
+ * collaborative storytelling platform.
+ * 
+ * Schema Overview:
+ * - users: Farcaster user profiles with FID as primary key
+ * - stories: Main story entries with creator info and metadata
+ * - storySegments: Incorporated story content (ordered sequence)
+ * - storyComments: Pending contributions awaiting approval
+ * - storyLikes: User likes that enable commenting permissions
+ * - storyLocks: Writing locks to prevent simultaneous editing
+ * - castComments: Farcaster cast-based comments for native workflow
+ */
+
 import { sql } from "drizzle-orm";
 import { pgTable, text, varchar, timestamp, integer, boolean } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";

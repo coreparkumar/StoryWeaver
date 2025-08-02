@@ -147,7 +147,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get all stories
+  /**
+   * Get All Stories - Returns list of all collaborative stories
+   * 
+   * Used by homepage to display story cards with metadata:
+   * - Basic story info (title, creator, creation date)
+   * - Contributor count and like count
+   * - Latest activity for sorting
+   */
   app.get("/api/stories", async (req, res) => {
     try {
       const stories = await storage.getAllStories();
@@ -708,7 +715,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Action handler route for Story Weaver - processes cast context and enables story weaving
+  /**
+   * Cast Action Handler - Transforms Farcaster casts into collaborative stories
+   * 
+   * This endpoint processes Farcaster action requests when users click "Weave My Part"
+   * on any cast. It creates a new collaborative story using the cast as a seed.
+   * 
+   * Request Format (Farcaster Action Spec):
+   * - untrustedData: { fid, timestamp, castId: { hash, fid } }
+   * - trustedData: { messageBytes } (signature verification)
+   * 
+   * Response Format (Frame Response):
+   * - type: "frame"
+   * - frameUrl: Link to the created story
+   * - cast: Object with text and embeds to post back to Farcaster
+   */
   app.post("/api/cast-actions/weave-story", async (req, res) => {
     try {
       console.log("Raw Farcaster action request:", JSON.stringify(req.body, null, 2));

@@ -1,3 +1,18 @@
+/**
+ * Farcaster SDK Integration Hook
+ * 
+ * Provides seamless integration with Farcaster Mini App SDK for user authentication
+ * and social features. This hook manages the SDK lifecycle, user data fetching,
+ * and context sharing across the application.
+ * 
+ * Features:
+ * - Automatic SDK initialization
+ * - User authentication via Farcaster identity
+ * - Enhanced user data from Neynar API
+ * - Context sharing for components
+ * - Error handling and loading states
+ */
+
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { initializeFarcasterSDK, FarcasterSDK } from "@/lib/farcaster";
 import { neynarClient } from "@/lib/neynar";
