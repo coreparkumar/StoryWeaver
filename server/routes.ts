@@ -303,6 +303,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get stories created from cast actions for dashboard
+  app.get("/api/cast-stories", async (req, res) => {
+    try {
+      const { creatorFid } = req.query;
+      
+      if (!creatorFid || parseInt(creatorFid as string) !== 977521) {
+        return res.status(403).json({ error: "Unauthorized access to cast stories" });
+      }
+      
+      const castStories = await storage.getCastStories();
+      res.json(castStories);
+    } catch (error) {
+      console.error("Error fetching cast stories:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  // Remove/delete a story (admin only)
+  app.delete("/api/stories/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { userFid } = req.body;
+      
+      if (!userFid || userFid !== 977521) {
+        return res.status(403).json({ error: "Only the Story Weaver owner can delete stories" });
+      }
+      
+      const success = await storage.deleteStory(id);
+      if (!success) {
+        return res.status(404).json({ error: "Story not found" });
+      }
+      
+      res.json({ success: true, message: "Story deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting story:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
   // Acquire writing lock for a story
   app.post("/api/stories/:id/lock", async (req, res) => {
     try {

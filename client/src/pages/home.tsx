@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useFarcaster } from "@/hooks/use-farcaster";
 import { StoryCard } from "@/components/StoryCard";
 import { StoryCreationModal } from "@/components/StoryCreationModal";
+import { CastStoriesDashboard } from "@/components/CastStoriesDashboard";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -19,15 +20,18 @@ export default function Home() {
   const sharedCastText = urlParams.get('text');
   
   // Fetch all stories
-  const { data: stories = [], isLoading: storiesLoading, error } = useQuery({
+  const { data: stories = [], isLoading: storiesLoading, error } = useQuery<StoryWithContributors[]>({
     queryKey: ['/api/stories'],
     refetchInterval: 15000, // Refresh every 15 seconds
   });
 
+  // Get first story ID safely
+  const firstStoryId = stories && stories.length > 0 ? stories[0].id : null;
+
   // Get story with full details for display
-  const { data: featuredStory, isLoading: storyLoading } = useQuery({
-    queryKey: ['/api/stories', stories[0]?.id],
-    enabled: !!stories[0]?.id && !!user,
+  const { data: featuredStory, isLoading: storyLoading } = useQuery<StoryWithContributors>({
+    queryKey: ['/api/stories', firstStoryId],
+    enabled: !!firstStoryId && !!user,
     refetchInterval: 10000, // Refresh every 10 seconds
   });
 
@@ -188,7 +192,7 @@ export default function Home() {
                 Live Collaboration
               </Badge>
             </div>
-            <StoryCard story={featuredStory} currentUser={user} />
+            <StoryCard story={featuredStory} currentUser={user || undefined} />
           </div>
         ) : stories.length > 0 ? (
           <Card>
@@ -220,6 +224,13 @@ export default function Home() {
               </div>
             </CardContent>
           </Card>
+        )}
+
+        {/* Cast Stories Dashboard for Owner */}
+        {user && user.fid === 977521 && (
+          <div className="mt-8">
+            <CastStoriesDashboard userFid={user.fid} />
+          </div>
         )}
       </main>
 

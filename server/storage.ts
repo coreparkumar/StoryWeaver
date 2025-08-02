@@ -96,6 +96,10 @@ export interface IStorage {
   declineComment(commentId: string): Promise<StoryComment | undefined>;
   getPendingComments(storyId: string): Promise<(StoryComment & { author: User })[]>;
   updateStorySharedCast(storyId: string, userFid: number, castHash: string): Promise<boolean>;
+  
+  // Admin dashboard operations
+  getCastStories(): Promise<(Story & { commentCount: number; createdFromCast: boolean })[]>;
+  deleteStory(storyId: string): Promise<boolean>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -829,6 +833,45 @@ export class DatabaseStorage implements IStorage {
       return true;
     } catch (error) {
       console.warn("Error updating weave cast:", error);
+      return false;
+    }
+  }
+
+  // Admin dashboard operations
+  async getCastStories(): Promise<(Story & { commentCount: number; createdFromCast: boolean })[]> {
+    const castStoriesData = await db
+      .select({
+        story: stories,
+        commentCount: sql<number>`(
+          SELECT COUNT(*) 
+          FROM ${storyComments} 
+          WHERE ${storyComments.storyId} = ${stories.id}
+        )`.as('commentCount')
+      })
+      .from(stories)
+      .where(sql`${stories.originalCastHash} IS NOT NULL`)
+      .orderBy(desc(stories.createdAt));
+
+    return castStoriesData.map(({ story, commentCount }) => ({
+      ...story,
+      commentCount,
+      createdFromCast: true
+    }));
+  }
+
+  async deleteStory(storyId: string): Promise<boolean> {
+    try {
+      // Delete in dependency order
+      await db.delete(castComments).where(eq(castComments.storyId, storyId));
+      await db.delete(storyComments).where(eq(storyComments.storyId, storyId));
+      await db.delete(storySegments).where(eq(storySegments.storyId, storyId));
+      await db.delete(storyLikes).where(eq(storyLikes.storyId, storyId));
+      await db.delete(storyLocks).where(eq(storyLocks.storyId, storyId));
+      
+      const result = await db.delete(stories).where(eq(stories.id, storyId)).returning();
+      return result.length > 0;
+    } catch (error) {
+      console.error("Error deleting story:", error);
       return false;
     }
   }
