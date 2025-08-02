@@ -26,7 +26,7 @@
   "actions": [
     {
       "name": "Weave My Part",
-      "icon": "https://worthifyme.in/story-weaver-icon.png",
+      "icon": "paintbrush",
       "description": "Transform this cast into a collaborative story seed",
       "aboutUrl": "https://worthifyme.in/about",
       "action": {

@@ -741,6 +741,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Cast Action Metadata - Required for action installation
+  app.get("/api/cast-actions/weave-story", async (req, res) => {
+    res.json({
+      name: "Weave My Part",
+      icon: "paintbrush", 
+      description: "Transform this cast into a collaborative story seed",
+      aboutUrl: "https://worthifyme.in/about",
+      action: {
+        type: "post",
+        postUrl: "https://worthifyme.in/api/cast-actions/weave-story"
+      }
+    });
+  });
+
   /**
    * Cast Action Handler - Transforms Farcaster casts into collaborative stories
    * 

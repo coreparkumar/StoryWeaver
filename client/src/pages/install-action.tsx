@@ -3,8 +3,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { ExternalLink, Wand2 } from "lucide-react";
 
 export default function InstallAction() {
-  // Correct Warpcast installation URL format with proper icon URL
-  const installUrl = "https://warpcast.com/~/add-cast-action?actionType=post&name=Weave+My+Part&icon=https://worthifyme.in/story-weaver-icon.png&postUrl=https://worthifyme.in/api/cast-actions/weave-story";
+  // Direct metadata URL installation per Farcaster docs
+  const installUrl = "https://warpcast.com/~/add-cast-action?url=https://worthifyme.in/api/cast-actions/weave-story";
   
   const handleInstall = () => {
     // Open Warpcast installation in new window
@@ -35,6 +35,9 @@ export default function InstallAction() {
               <li>4. Install the Story Weaver miniapp first (required)</li>
               <li>5. Start using "Weave My Part" on any cast!</li>
             </ol>
+            <p className="text-xs text-amber-700 mt-2">
+              Note: Now using direct metadata URL installation format
+            </p>
           </div>
           <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
             <h3 className="font-semibold text-purple-900 mb-2">What this action does:</h3>
