@@ -38,6 +38,7 @@ export interface IStorage {
   createStory(story: InsertStory): Promise<Story>;
   updateStory(id: string, updates: Partial<Story>): Promise<Story | undefined>;
   getAllStories(): Promise<Story[]>;
+  getStoryByCastHash(castHash: string): Promise<Story | undefined>;
 
   // Story segment operations
   getStorySegments(storyId: string): Promise<StorySegment[]>;
@@ -251,6 +252,11 @@ export class DatabaseStorage implements IStorage {
 
   async getAllStories(): Promise<Story[]> {
     return await db.select().from(stories).orderBy(desc(stories.createdAt));
+  }
+
+  async getStoryByCastHash(castHash: string): Promise<Story | undefined> {
+    const [story] = await db.select().from(stories).where(eq(stories.originalCastHash, castHash));
+    return story || undefined;
   }
 
   async getStorySegments(storyId: string): Promise<StorySegment[]> {

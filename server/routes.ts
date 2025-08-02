@@ -828,6 +828,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (triggerFid === 977521) {
         // Owner triggered - can create seed stories
         
+        // Check if a story already exists for this cast
+        const existingStory = await storage.getStoryByCastHash(castHash);
+        if (existingStory) {
+          return res.json({
+            type: "frame",
+            frameUrl: `https://worthifyme.in/story/${existingStory.id}`,
+            cast: {
+              text: `🔗 Story already exists for this cast!\n\n📖 Join the ongoing collaborative story:\n\n✨ Continue weaving:`,
+              embeds: [`https://worthifyme.in/story/${existingStory.id}`],
+              parent: castHash
+            }
+          });
+        }
+        
         // For production, fetch cast details from Farcaster/Neynar API using castHash
         const castText = req.body.text || "A fascinating cast that sparked collaborative storytelling";
         const username = req.body.username || `storyweaver`;
