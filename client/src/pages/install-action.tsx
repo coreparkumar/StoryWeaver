@@ -36,7 +36,7 @@ export default function InstallAction() {
               <li>5. Start using "Weave My Part" on any cast!</li>
             </ol>
             <p className="text-xs text-green-700 mt-2">
-              ✅ Metadata endpoint now returns proper JSON locally - deployment update needed
+              ✅ Fixed metadata format per Farcaster spec (removed postUrl, added CORS)
             </p>
           </div>
           <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">

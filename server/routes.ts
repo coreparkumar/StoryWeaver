@@ -741,17 +741,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // CORS preflight for cast actions
+  app.options("/api/cast-actions/weave-story", (req, res) => {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+    res.status(200).end();
+  });
+
   // Cast Action Metadata - Required for action installation
   app.get("/api/cast-actions/weave-story", async (req, res) => {
     res.setHeader('Content-Type', 'application/json');
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+    
     res.status(200).json({
       name: "Weave My Part",
       icon: "paintbrush", 
       description: "Transform this cast into a collaborative story seed",
       aboutUrl: "https://worthifyme.in/about",
       action: {
-        type: "post",
-        postUrl: "https://worthifyme.in/api/cast-actions/weave-story"
+        type: "post"
       }
     });
   });
@@ -773,6 +785,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
    */
   app.post("/api/cast-actions/weave-story", async (req, res) => {
     try {
+      // Set CORS headers for action responses
+      res.setHeader('Access-Control-Allow-Origin', '*');
+      res.setHeader('Content-Type', 'application/json');
+      
       console.log("Raw Farcaster action request:", JSON.stringify(req.body, null, 2));
       
       // Parse Farcaster action payload according to specification
