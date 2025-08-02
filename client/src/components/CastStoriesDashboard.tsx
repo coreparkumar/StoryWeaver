@@ -46,6 +46,10 @@ export function CastStoriesDashboard({ userFid }: CastStoriesDashboardProps) {
     refetchInterval: 10000, // Refresh every 10 seconds
   });
 
+  console.log('CastStoriesDashboard - isLoading:', isLoading);
+  console.log('CastStoriesDashboard - castStories:', castStories);
+  console.log('CastStoriesDashboard - castStories.length:', castStories.length);
+
   const closeStoryMutation = useMutation({
     mutationFn: async (storyId: string) => {
       const response = await apiRequest('POST', `/api/stories/${storyId}/close`, { userFid });
