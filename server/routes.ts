@@ -804,13 +804,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
     
+    console.log("Action metadata requested from:", req.get('User-Agent'));
+    
+    // Official Farcaster Actions specification format
     res.status(200).json({
       name: "Weave My Part",
       icon: "paintbrush", 
       description: "Transform this cast into a collaborative story seed",
       aboutUrl: "https://worthifyme.in/about",
       action: {
-        type: "post"
+        type: "post",
+        postUrl: "https://worthifyme.in/api/cast-actions/weave-story"
       }
     });
   });
@@ -837,10 +841,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.setHeader('Content-Type', 'application/json');
       
       console.log("=== Cast Action Request Debug ===");
-      console.log("Headers:", JSON.stringify(req.headers, null, 2));
-      console.log("Body:", JSON.stringify(req.body, null, 2));
+      console.log("User-Agent:", req.get('User-Agent'));
       console.log("Content-Type:", req.get('Content-Type'));
       console.log("Origin:", req.get('Origin'));
+      console.log("Body keys:", Object.keys(req.body || {}));
+      console.log("Body:", JSON.stringify(req.body, null, 2));
+      
+      // Check if this is a valid Farcaster frame message
+      const hasFrameMessage = req.body?.trustedData?.messageBytes || req.body?.untrustedData;
+      console.log("Has Frame Message Format:", hasFrameMessage);
       console.log("================================");
       
       // Parse Farcaster action payload according to specification

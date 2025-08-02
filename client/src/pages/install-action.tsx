@@ -108,6 +108,9 @@ export default function InstallAction() {
                 <li>• <strong>Update:</strong> Get latest action version (same as install)</li>
                 <li>• <strong>Remove:</strong> Opens Warpcast settings to delete action</li>
               </ul>
+              <p className="text-xs text-blue-600 mt-2">
+                📋 Our metadata endpoint: <code>/api/cast-actions/weave-story</code>
+              </p>
             </div>
           </div>
           
