@@ -846,11 +846,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
    * - untrustedData: { fid, timestamp, castId: { hash, fid } }
    * - trustedData: { messageBytes } (signature verification)
    * 
-   * Response Format (Frame Response):
-   * - type: "frame"
-   * - frameUrl: Link to the created story
-   * - cast: Object with text and embeds to post back to Farcaster
+   * Response Format (Farcaster Action Response):
+   * - type: "message" with message < 80 characters
+   * - Optional: link field for external URL
    */
+  
+  // Helper function to validate and truncate message to 80 characters
+  function validateActionMessage(message: string): string {
+    if (message.length <= 80) return message;
+    
+    // Truncate and add ellipsis while staying under 80 chars
+    return message.substring(0, 77) + "...";
+  }
   app.post("/api/cast-actions/weave-story", async (req, res) => {
     try {
       // Set CORS headers for action responses
@@ -909,8 +916,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Check if a story already exists for this cast
         const existingStory = await storage.getStoryByCastHash(castHash);
         if (existingStory) {
+          const message = `🔗 Story already exists!`;
           return res.json({
-            message: `🔗 Story already exists for this cast!\n\n📖 Join the ongoing collaborative story:\n\n✨ Continue weaving: https://worthifyme.in/story/${existingStory.id}`
+            message: validateActionMessage(message),
+            link: `https://worthifyme.in/story/${existingStory.id}`
           });
         }
         
@@ -928,9 +937,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         const story = await storage.createStory(storyData);
         
-        // Return proper cast action JSON response
+        // Return proper cast action JSON response (80 char limit)
+        const message = `🧙‍♂️ New story created!`;
         return res.json({
-          message: `🧙‍♂️ Story Weaver: New collaborative story started!\n\n📖 "${castText.length > 120 ? castText.substring(0, 120) + "..." : castText}"\n\n✨ Join the weaving: https://worthifyme.in/story/${story.id}`
+          message: validateActionMessage(message),
+          link: `https://worthifyme.in/story/${story.id}`
         });
       } else {
         // Non-owner users can comment on existing stories via "Weave My Part"
@@ -965,13 +976,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
           
           await storage.addCastComment(castCommentData);
           
+          const message = `🎭 Contribution sent for review!`;
           return res.json({
-            message: `🎭 Story contribution submitted!\n\n📝 Your contribution to "${existingStory.title}" has been sent for review.\n\n⏳ The story creator will review and incorporate approved contributions.\n\n✨ View the story: https://worthifyme.in/story/${existingStory.id}`
+            message: validateActionMessage(message),
+            link: `https://worthifyme.in/story/${existingStory.id}`
           });
         } else {
           // No existing story for this cast - suggest they can participate in existing stories
+          const message = `🧙‍♂️ No story yet! Explore existing stories.`;
           return res.json({
-            message: `🧙‍♂️ Welcome to Story Weaver!\n\n📚 This cast doesn't have a story yet. Only the Story Weaver owner can create new story seeds.\n\n✨ You can participate by:\n• Liking existing stories\n• Adding your contributions\n• Helping weave collaborative tales!\n\n🔗 Explore stories: https://worthifyme.in`
+            message: validateActionMessage(message),
+            link: `https://worthifyme.in`
           });
         }
       }
@@ -984,14 +999,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error("Request headers:", JSON.stringify(req.headers, null, 2));
       console.error("===============================");
       
+      // Return error response (also limited to 80 characters)
+      const errorMessage = error instanceof Error ? error.message : "Story weaving failed";
       res.status(500).json({ 
-        error: "Story weaving failed",
-        details: error instanceof Error ? error.message : "Unknown error",
-        debug: process.env.NODE_ENV === 'development' ? {
-          stack: error instanceof Error ? error.stack : null,
-          body: req.body,
-          headers: req.headers
-        } : undefined
+        message: validateActionMessage(errorMessage)
       });
     }
   });
