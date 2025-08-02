@@ -13,9 +13,7 @@
     "buttonTitle": "🧙‍♂️ Start Weaving",
     "splashImageUrl": "https://worthifyme.in/story-weaver-promo.jpg",
     "splashBackgroundColor": "#8a63d2",
-    "webhookUrl": "https://worthifyme.in/api/webhooks/farcaster"
-  },
-  "miniapp": {
+    "webhookUrl": "https://worthifyme.in/api/webhooks/farcaster",
     "triggers": [
       {
         "type": "cast",
@@ -28,7 +26,7 @@
   "actions": [
     {
       "name": "Weave My Part",
-      "icon": "magic-wand",
+      "icon": "https://worthifyme.in/story-weaver-icon.png",
       "description": "Transform this cast into a collaborative story seed",
       "aboutUrl": "https://worthifyme.in/about",
       "action": {

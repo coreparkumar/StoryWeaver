@@ -3,8 +3,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { ExternalLink, Wand2 } from "lucide-react";
 
 export default function InstallAction() {
-  // Correct Warpcast installation URL format
-  const installUrl = "https://warpcast.com/~/add-cast-action?actionType=post&name=Weave+My+Part&icon=wand&postUrl=https://worthifyme.in/api/cast-actions/weave-story";
+  // Correct Warpcast installation URL format with proper icon URL
+  const installUrl = "https://warpcast.com/~/add-cast-action?actionType=post&name=Weave+My+Part&icon=https://worthifyme.in/story-weaver-icon.png&postUrl=https://worthifyme.in/api/cast-actions/weave-story";
   
   const handleInstall = () => {
     // Open Warpcast installation in new window
@@ -32,7 +32,8 @@ export default function InstallAction() {
               <li>1. Click the "Install" button below</li>
               <li>2. Login to Warpcast if prompted</li>
               <li>3. Confirm the action installation</li>
-              <li>4. Start using "Weave My Part" on any cast!</li>
+              <li>4. Install the Story Weaver miniapp first (required)</li>
+              <li>5. Start using "Weave My Part" on any cast!</li>
             </ol>
           </div>
           <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
@@ -48,10 +49,10 @@ export default function InstallAction() {
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
             <h3 className="font-semibold text-blue-900 mb-2">How to use after installation:</h3>
             <ol className="text-sm text-blue-800 space-y-1">
-              <li>1. Find an interesting cast in your Warpcast feed</li>
-              <li>2. Click the "Weave My Part" action button</li>
-              <li>3. The cast becomes a collaborative story seed</li>
-              <li>4. Share and invite others to contribute!</li>
+              <li>1. Only Story Weaver owner (FID 977521) can create new story seeds</li>
+              <li>2. Others can participate by liking and commenting on existing stories</li>
+              <li>3. Cast actions appear only for users who install the miniapp</li>
+              <li>4. Stories auto-close after 10 contributions with cleanup optimization</li>
             </ol>
           </div>
           

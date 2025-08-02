@@ -1,196 +1,53 @@
 # Story Weaver - Collaborative Farcaster Storytelling
 
 ## Overview
-
-Story Weaver is a collaborative storytelling platform built as a Farcaster Mini App. It allows users to create and contribute to shared stories, with a like-based permission system where users must like a story to unlock writing privileges. The application combines React frontend with Express backend, using PostgreSQL for data persistence and integrating with Farcaster's social features.
-
-## Recent Changes
-
-**February 2, 2025**
-- **Corrected Cast Action Workflow**: Fixed cast action to only appear for users who install the miniapp, not universally
-- **Owner-Only Story Creation**: Only FID 977521 (owner) can create new seed stories using "Weave My Part" action
-- **Story Lifecycle Management**: Added proper story closure system with auto-close after 10 comments and manual closure by owner
-- **Database Cleanup Optimization**: Implemented cleanup of comments and cast comments when stories are closed
-- **Final Story Content**: Stories now generate final content combining initial content + all incorporated segments
-- **Installation URL Fix**: Fixed Warpcast installation URL format from API endpoint to proper warpcast.com format
-- **Miniapp-Scoped Actions**: Actions now only appear for users who have added the Story Weaver miniapp
-- **Comment Status Validation**: Added checks to prevent commenting on closed stories
-- **Auto-Close Trigger**: Stories automatically close after reaching maximum contributions (10 comments)
-
-**February 1, 2025**
-- **Documentation Organization**: Moved all documentation files to `Documentation/` folder for better structure
-- **Resource Index**: Created comprehensive RESOURCES.md with all images, assets, URLs, and external dependencies
-- **Documentation Complete**: Added feature index, implementation guides, and code documentation
-- **README Enhancement**: Created detailed project overview with quick start guide and architecture reference
-- **Asset Mapping**: Documented all images, icons, and resources with file locations and public URLs
-- **TypeScript Cleanup**: Fixed storage layer type errors and added proper null safety checks
-- **File Organization**: Structured documentation for maintainability and developer onboarding
-- **Cast Action Deployment Success**: Successfully deployed Story Weaver to production at https://worthifyme.in/
-- **Action Handler Verification**: Confirmed `/api/cast-actions/weave-story` POST endpoint working correctly on production
-- **Farcaster Meta Tags Fixed**: Updated embed meta tags to use proper Story Weaver promotional assets
-- **Installation Endpoint Live**: Cast action installation working at `https://worthifyme.in/api/cast-actions`
-- **Manifest Verification**: All Farcaster Mini App manifest components properly configured and accessible
-- **Cast Action Ready**: "Weave My Part" action now available for installation and use in Farcaster ecosystem
-
-**January 31, 2025**
-- **Cast Action Installation System**: Added proper Cast Action installation endpoint at `/api/cast-actions` for users to install "Weave My Part" action
-- **Installation Page**: Created dedicated `/install-action` page with user-friendly installation flow and clear instructions
-- **About Page**: Added comprehensive `/about` page explaining Story Weaver workflow and cast action functionality
-- **Action Discovery Fix**: Resolved missing cast action buttons by implementing proper Farcaster Action installation format alongside V2 Mini App triggers
-- **Farcaster V2 Manifest Compliance**: Fixed manifest to comply with official Farcaster Frames V2/Mini Apps specification
-- **Version Format Fix**: Changed from semantic versioning "1.0.1" to spec-compliant version "1"
-- **Structure Correction**: Updated manifest from "miniapp" to "frame" with proper "triggers" array format
-- **Cast-Based Collaborative Workflow**: Implemented full Farcaster cast integration for native social collaboration
-- **Cast Comment System**: Added `cast_comments` table for tracking Farcaster cast comments and approval workflow
-- **Native Farcaster Integration**: Stories now use original and weave cast hashes for viral sharing loops
-- **Creator Cast Management**: Story creators can approve cast comments and automatically repost as new weave casts
-- **Enhanced Database Schema**: Added `originalCastHash`, `latestWeaveCastHash`, and `weaveCastCount` to stories table
-- **Cast-Based API Endpoints**: New endpoints for cast comment creation, approval, and weave cast management
-- **Farcaster SDK Enhancement**: Integrated cast sharing, cast creation, and user authentication via Mini App SDK
-- **Viral Collaboration Loop**: Approved comments become incorporated content and trigger new cast shares
-- **Social Permission System**: Maintained like-to-comment requirement with native Farcaster cast interaction
-- **Complete Farcaster Actions Integration**: Implemented verified action handler pattern with cast context parsing and weaved cast responses
-- **Seed-to-Weave Workflow**: Users trigger Story Weaver action from original "seed" casts, system creates collaborative stories with automatic weaved cast posting
-- **Action Handler Route**: Proper /api/cast-actions/weave-story endpoint that processes cast context, creates stories, and returns frame responses for cast posting
-- **Owner Approval Architecture**: Built pending weaves system (currently auto-approving for demonstration) with future manual approval workflow support
-- **Individual Story Pages**: Added dedicated story pages with routing for better story viewing and sharing experience
-- **Cast Action About Page**: Added informational about page explaining Story Weaver workflow for cast action users
-- **Story Creation Owner Restriction**: Restored FID restriction with clear ownership message for Story Weaver platform control
-- **Rate Limit Fix**: Removed restrictive rate limiting middleware preventing story creation
-- **Critical 400 Error Fix**: Previously resolved 400 errors when users click "add to story" button by fixing schema validation
-- **Database Migration Complete**: Successfully migrated from in-memory storage (MemStorage) to PostgreSQL database (DatabaseStorage)
-- **Full Data Persistence**: All user data, stories, story segments, likes, and comments are now stored persistently in PostgreSQL
-- **Sample Data Initialization**: Automated sample data creation with collaborative story "Digital Magic Adventures"
-- **Story Creation Restrictions**: Added warp-sharing requirement for new story creation to control content quality
-- **Farcaster Deployment Setup**: Added manifest file and app icon for Mini App registration
-- **Authentic Farcaster Manifest**: Generated proper accountAssociation signature using FID 977521 private key for domain verification
-- **Character Limits**: Set 280-character limit per story contribution (roughly 40-60 words)
-- **Production Ready**: Application now supports persistent data storage and authentic Farcaster integration for deployment
-- **Promotional Assets**: Added atmospheric promotional image featuring magical storytelling theme for app marketing
-- **Manifest Enhancement**: Updated manifest with promotional imagery for splash screens and social sharing
-- **Cast Share URL**: Added missing castShareUrl property to Farcaster manifest for proper cast sharing functionality
-- **Domain Migration**: Updated all manifest URLs to use worthifyme.in domain with HTTPS for proper Farcaster integration
-- **Discovery Optimization**: Explicitly set noindex: false in manifest to ensure Story Weaver is discoverable in Warpcast directory
-- **Brand Icon Update**: Replaced generic SVG icon with custom Story Weaver PNG icon featuring collaborative storytelling design elements
-- **Account Association Update**: Updated accountAssociation with new authentication credentials for worthifyme.in domain
-- **SDK Ready Fix**: Fixed Farcaster SDK initialization to automatically call ready() after setup, preventing splash screen persistence
-- **SDK Authentication Update**: Enhanced Farcaster SDK implementation to match official documentation patterns with proper context handling and QuickAuth support
-- **Username Validation Fix**: Added fallback username generation to prevent 400 errors when user data is incomplete
-- **Manifest Actions Update**: Moved cast actions to proper actions array under miniapp with context: ["cast"] for universal cast action availability
+Story Weaver is a collaborative storytelling platform implemented as a Farcaster Mini App. It enables users to co-create stories, leveraging a like-based permission system where liking a story grants writing privileges. The platform integrates a React frontend with an Express backend, utilizing PostgreSQL for data persistence and deeply integrating with Farcaster's social features for a native social collaboration experience. The business vision is to foster creative expression and community engagement within the Farcaster ecosystem, offering a unique social storytelling experience.
 
 ## User Preferences
-
 Preferred communication style: Simple, everyday language.
 Farcaster FID: 977521 (authorized for story creation)
 
 ## System Architecture
+The application uses a full-stack monorepo structure with `client/` (React, Vite), `server/` (Express.js), and `shared/` (common TypeScript types) directories, enabling type safety across the entire application.
 
-### Full-Stack Monorepo Structure
-The application uses a monorepo architecture with three main directories:
-- `client/` - React frontend with Vite build system
-- `server/` - Express.js backend API
-- `shared/` - Common TypeScript types & database schema
-
-This setup allows for shared type definitions between frontend and backend, ensuring type safety across the entire application.
-
-### Tech Stack Selection
-- **Frontend**: React 18 with TypeScript, shadcn/ui components, TailwindCSS
-- **Backend**: Express.js with TypeScript
+**Tech Stack:**
+- **Frontend**: React 18, TypeScript, shadcn/ui, TailwindCSS
+- **Backend**: Express.js, TypeScript
 - **Database**: PostgreSQL with Drizzle ORM
-- **Build Tools**: Vite for frontend, esbuild for backend bundling
-- **Deployment**: Single build process that creates both client and server bundles
+- **Build Tools**: Vite (frontend), esbuild (backend)
 
-## Key Components
+**Key Components & Design Decisions:**
 
-### Database Schema (Drizzle ORM)
-The application uses a relational database design with six main tables:
-- `users` - Farcaster user profiles with FID (Farcaster ID) as unique identifier
-- `stories` - Main story entries with metadata and creator information
-- `storySegments` - Individual contributions to stories, ordered sequentially (incorporated content)
-- `storyComments` - User-submitted story parts awaiting creator review and incorporation
-- `storyLikes` - Tracks which users have liked which stories (enables commenting privileges)
-- `storyLocks` - Manages exclusive writing access with 1-minute maximum duration for creators
-
-This design enables moderated collaborative writing where users submit ideas via comments and creators curate the final story content.
-
-### Frontend Architecture
-- **Component Library**: shadcn/ui provides consistent, accessible UI components
-- **State Management**: TanStack Query for server state, React hooks for local state
-- **Routing**: Wouter for lightweight client-side routing
-- **Styling**: TailwindCSS with custom Farcaster brand color variables
-
-### Backend API Structure
-RESTful API with endpoints for:
-- User management (create/update Farcaster users)
-- Story operations (get, create, list stories)
-- Story segments (add contributions)
-- Like system (like/unlike stories for permissions)
-
-### Farcaster Integration
-- Mini App SDK integration for user authentication and context
-- Neynar API client for enhanced Farcaster data (user profiles, follower counts)
-- Meta tags optimized for Farcaster sharing and Mini App discovery
-
-## Data Flow
-
-### User Authentication Flow
-1. Farcaster Mini App SDK provides user context (FID, username, display name)
-2. Application creates/updates user record in local database
-3. Enhanced user data fetched from Neynar API when available
-4. User context maintained throughout session for permissions
-
-### Story Interaction Flow
-1. User views story and sees current content + contributor list + pending comments
-2. To contribute, user must first "like" the story (via Farcaster)
-3. Like action grants commenting privileges and opens comment form
-4. User submits story part as a comment for creator review
-5. Story creator can review comments and incorporate selected ones into the main story
-6. Incorporated comments become story segments and are removed from pending comments
-7. Real-time updates show new comments and incorporated content
-
-### Permission System
-The tiered permission system ensures:
-- Only engaged users can comment (must like to contribute ideas)
-- Story creators have full editorial control over final content
-- Social proof through visible like counts and comment engagement
-- Natural content quality filter through creator curation
-- Writing locks prevent simultaneous editing conflicts when incorporating comments (1-minute maximum)
-- Story creation requires warp sharing to authorized FID for platform quality control
+*   **Database Schema (Drizzle ORM):** A relational design with `users`, `stories`, `storySegments` (incorporated content), `storyComments` (pending content), `storyLikes` (permission tracking), and `storyLocks` (writing access management). This supports a moderated collaborative writing workflow where creators curate content from user submissions.
+*   **Farcaster Integration:**
+    *   Deep integration for native social collaboration, including a `cast_comments` table for tracking Farcaster cast comments and an approval workflow.
+    *   Stories utilize `originalCastHash` and `latestWeaveCastHash` for viral sharing loops.
+    *   Creator-managed cast comments: story creators can approve cast comments and automatically repost them as new weave casts.
+    *   Farcaster Mini App SDK for user authentication and context.
+    *   Full Farcaster Actions integration with a `weave-story` action handler for processing cast context, creating stories, and returning frame responses.
+    *   Owner (FID 977521) restriction for new story creation, ensuring platform quality control.
+    *   Stories automatically close after 10 comments or can be manually closed by the owner.
+    *   A like-to-comment permission system requires users to like a story to unlock writing privileges, promoting engagement.
+    *   Writing locks with a 1-minute maximum duration prevent simultaneous editing conflicts.
+*   **Frontend Architecture:** Leverages shadcn/ui for consistent UI, TanStack Query for server state, React hooks for local state, Wouter for lightweight routing, and TailwindCSS for styling with custom Farcaster brand colors.
+*   **Backend API Structure:** Provides a RESTful API for user management, story operations (get, create, list), story segment addition, and the like system.
+*   **Data Flow:**
+    *   **User Authentication:** Farcaster Mini App SDK provides user context, which is stored/updated in the local database. Enhanced user data is fetched from Neynar API.
+    *   **Story Interaction:** Users like a story to gain commenting privileges. Submitted story parts are tracked as comments for creator review. Approved comments become `storySegments`.
+*   **UI/UX:** Uses shadcn/ui for components and TailwindCSS for styling, with custom Farcaster brand color variables. Promotional assets (images, icons) are integrated for marketing and app discovery within Farcaster.
 
 ## External Dependencies
 
-### Database Infrastructure
-- Uses Neon (PostgreSQL) as the primary database provider
-- Drizzle ORM for type-safe database operations and migrations
-- Connection pooling and serverless-optimized database access
-
-### Farcaster Ecosystem
-- **Farcaster Mini App SDK**: User authentication and social context
-- **Neynar API**: Enhanced user data, cast interactions, social graph access
-- **Farcaster Protocol**: FID-based user identification, cast hash tracking
-- **Mini App Manifest**: Located at `/.well-known/farcaster.json` for app registration
-- **App Icon**: SVG icon at `/icon.svg` for Farcaster directory listing
-
-### UI and Styling
-- **Radix UI**: Accessible component primitives for complex interactions
-- **TailwindCSS**: Utility-first styling with custom design system
-- **Lucide Icons**: Consistent iconography throughout the application
-
-## Deployment Strategy
-
-### Build Process
-1. **Frontend Build**: Vite compiles React app to static assets in `dist/public`
-2. **Backend Build**: esbuild bundles Express server to `dist/index.js`
-3. **Single Deployment**: Combined build creates deployable Node.js application
-
-### Production Configuration
-- Environment variables for database connection and API keys
-- Static file serving for frontend through Express in production
-- Development mode uses Vite dev server with HMR for rapid iteration
-
-### Database Management
-- Drizzle migrations stored in `migrations/` directory
-- Schema changes pushed via `npm run db:push` command
-- PostgreSQL dialect with UUID primary keys for scalability
-
-The architecture supports both development flexibility and production scalability, with clear separation of concerns while maintaining type safety across the full stack.
+*   **Database Infrastructure:**
+    *   Neon (PostgreSQL) as the primary database provider.
+    *   Drizzle ORM for type-safe database operations and migrations.
+*   **Farcaster Ecosystem:**
+    *   Farcaster Mini App SDK for user authentication and social context.
+    *   Neynar API for enhanced user data, cast interactions, and social graph access.
+    *   Farcaster Protocol for FID-based user identification and cast hash tracking.
+    *   Mini App Manifest located at `/.well-known/farcaster.json` for app registration.
+    *   App Icon (`/icon.svg`) for Farcaster directory listing.
+*   **UI and Styling:**
+    *   Radix UI for accessible component primitives.
+    *   TailwindCSS for utility-first styling.
+    *   Lucide Icons for consistent iconography.
