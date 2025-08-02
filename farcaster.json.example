@@ -1,0 +1,40 @@
+{
+  "accountAssociation": {
+    "header": "0x...",
+    "payload": "0x...",
+    "signature": "0x..."
+  },
+  "frame": {
+    "version": "1",
+    "name": "Story Weaver",
+    "iconUrl": "https://your-domain.com/story-weaver-icon.png",
+    "splashImageUrl": "https://your-domain.com/story-weaver-promo.jpg",
+    "splashBackgroundColor": "#1a1b23",
+    "homeUrl": "https://your-domain.com/",
+    "webhookUrl": "https://your-domain.com/api/webhook",
+    "imageUrl": "https://your-domain.com/story-weaver-promo.jpg"
+  },
+  "miniapp": {
+    "name": "Story Weaver",
+    "url": "https://your-domain.com/",
+    "triggers": [
+      {
+        "triggerType": "cast",
+        "url": "https://your-domain.com/"
+      }
+    ],
+    "actions": [
+      {
+        "name": "weave-story",
+        "url": "https://your-domain.com/api/cast-actions/weave-story",
+        "description": "Transform this cast into a collaborative story",
+        "icon": "compose",
+        "aboutUrl": "https://your-domain.com/about",
+        "action": {
+          "type": "post"
+        }
+      }
+    ]
+  },
+  "noindex": false
+}

@@ -56,12 +56,13 @@
 | **Promotional Image** | `dist/public/assets/story-weaver-promo-[hash].jpg` | `https://worthifyme.in/assets/story-weaver-promo-[hash].jpg` | Asset optimization |
 
 ### Configuration Files
-| File | Purpose | Contains |
-|------|---------|----------|
-| `client/public/.well-known/farcaster.json` | Farcaster app manifest | Account association, actions, triggers |
-| `client/public/actions.json` | Cast actions definition | Action metadata for installation |
-| `components.json` | shadcn/ui configuration | Component library settings |
-| `tailwind.config.ts` | Styling configuration | Custom colors, theme settings |
+| File | Purpose | Contains | Public Safe |
+|------|---------|----------|-------------|
+| `client/public/.well-known/farcaster.json` | Farcaster app manifest | Account association, actions, triggers | ❌ (contains real signature) |
+| `farcaster.json.example` | Manifest template | Example structure with dummy data | ✅ Safe to share |
+| `client/public/actions.json` | Cast actions definition | Action metadata for installation | ✅ Safe to share |
+| `components.json` | shadcn/ui configuration | Component library settings | ✅ Safe to share |
+| `tailwind.config.ts` | Styling configuration | Custom colors, theme settings | ✅ Safe to share |
 
 ## Documentation Structure
 

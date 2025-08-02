@@ -165,7 +165,8 @@ story-weaver/
     ├── README.md                 # This file - project overview
     ├── CODE_INDEX.md            # Feature location map  
     ├── FEATURE_DOCUMENTATION.md # Deep dive implementation guides
-    └── RESOURCES.md             # Assets, images, and external resources index
+    ├── RESOURCES.md             # Assets, images, and external resources index
+    └── DEPLOYMENT_SECURITY.md   # Security guidelines for public sharing
 ```
 
 ## 🔍 Find Features Quickly
