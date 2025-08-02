@@ -15,14 +15,16 @@
     "splashBackgroundColor": "#8a63d2",
     "webhookUrl": "https://worthifyme.in/api/webhooks/farcaster"
   },
-  "triggers": [
-    {
-      "type": "cast",
-      "id": "weave-story",
-      "url": "https://worthifyme.in/api/cast-actions/weave-story",
-      "name": "Weave My Part"
-    }
-  ],
+  "miniapp": {
+    "triggers": [
+      {
+        "type": "cast",
+        "id": "weave-story",
+        "url": "https://worthifyme.in/api/cast-actions/weave-story",
+        "name": "Weave My Part"
+      }
+    ]
+  },
   "actions": [
     {
       "name": "Weave My Part",

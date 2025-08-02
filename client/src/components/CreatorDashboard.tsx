@@ -9,7 +9,7 @@ import { CheckCircle, XCircle, Clock, Users, Share, StopCircle } from "lucide-re
 import { apiRequest } from "@/lib/queryClient";
 import { useFarcaster } from "@/hooks/use-farcaster";
 import { useToast } from "@/hooks/use-toast";
-import type { StoryComment, User, StoryWithContributors } from "@shared/schema";
+import type { StoryComment, User, StoryWithContributors, CastComment } from "@shared/schema";
 import { CastCreator } from "./CastCreator";
 
 interface CreatorDashboardProps {
@@ -26,24 +26,24 @@ export function CreatorDashboard({ story }: CreatorDashboardProps) {
     return null;
   }
 
-  const { data: pendingComments = [], isLoading } = useQuery({
-    queryKey: ['/api/stories', story.id, 'cast-comments'],
+  const { data: pendingComments = [], isLoading } = useQuery<(StoryComment & { author: User })[]>({
+    queryKey: ['/api/stories', story.id, 'comments'],
     refetchInterval: 10000, // Refresh every 10 seconds
     enabled: !!user,
   });
 
-  const { data: castComments = [] } = useQuery({
+  const { data: castComments = [] } = useQuery<CastComment[]>({
     queryKey: ['/api/stories', story.id, 'cast-comments', 'pending'],
     refetchInterval: 5000,
     enabled: !!user,
   });
 
   const approveCommentMutation = useMutation({
-    mutationFn: async ({ commentId, weaveCastHash }: { commentId: string; weaveCastHash: string }) => {
-      return apiRequest(`/api/cast-comments/${commentId}/approve`, {
-        method: 'POST',
-        body: { userFid: user.fid, weaveCastHash }
+    mutationFn: async (commentId: string) => {
+      const response = await apiRequest('POST', `/api/stories/${story.id}/comments/${commentId}/incorporate`, {
+        userFid: user.fid
       });
+      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/stories', story.id] });
@@ -83,22 +83,22 @@ export function CreatorDashboard({ story }: CreatorDashboardProps) {
     },
   });
 
-  const endSessionMutation = useMutation({
+  const closeStoryMutation = useMutation({
     mutationFn: async () => {
-      const response = await apiRequest('POST', `/api/stories/${story.id}/end-session`, { userFid: user.fid });
+      const response = await apiRequest('POST', `/api/stories/${story.id}/close`, { userFid: user.fid });
       return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/stories', story.id] });
       toast({
-        title: "Story Session Ended",
-        description: "Your collaborative story session has been closed to new contributions.",
+        title: "Story Closed",
+        description: "Story has been permanently closed and final content compiled.",
       });
     },
     onError: (error: any) => {
       toast({
         title: "Error",
-        description: error.message || "Failed to end session",
+        description: error.message || "Failed to close story",
         variant: "destructive",
       });
     },
@@ -266,23 +266,23 @@ export function CreatorDashboard({ story }: CreatorDashboardProps) {
                   <AlertDialogTrigger asChild>
                     <Button variant="outline" className="w-full border-red-300 text-red-700 hover:bg-red-50">
                       <StopCircle className="w-4 h-4 mr-2" />
-                      End Collaboration
+                      Close Story
                     </Button>
                   </AlertDialogTrigger>
                   <AlertDialogContent>
                     <AlertDialogHeader>
-                      <AlertDialogTitle>End Story Collaboration?</AlertDialogTitle>
+                      <AlertDialogTitle>Close Story Permanently?</AlertDialogTitle>
                       <AlertDialogDescription>
-                        This will stop accepting new contributions to your story. Contributors can still view the final story, but cannot add new parts. This action cannot be undone.
+                        This will permanently close your story and delete all pending comments. The final content will be compiled automatically. This action cannot be undone.
                       </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
                       <AlertDialogCancel>Cancel</AlertDialogCancel>
                       <AlertDialogAction
-                        onClick={() => endSessionMutation.mutate()}
+                        onClick={() => closeStoryMutation.mutate()}
                         className="bg-red-600 hover:bg-red-700"
                       >
-                        End Collaboration
+                        Close Story
                       </AlertDialogAction>
                     </AlertDialogFooter>
                   </AlertDialogContent>

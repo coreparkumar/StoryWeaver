@@ -34,14 +34,18 @@ export const stories = pgTable("stories", {
   creatorFid: integer("creator_fid").notNull(),
   title: text("title").notNull(),
   initialContent: text("initial_content").notNull(),
+  finalContent: text("final_content"), // Final story after closure
   originalCastHash: text("original_cast_hash"), // Hash of the original Farcaster cast that started the story
   latestWeaveCastHash: text("latest_weave_cast_hash"), // Hash of the most recent weave cast
-  sessionStatus: text("session_status").notNull().default("active"), // "active" | "ended"
+  finalCastHash: text("final_cast_hash"), // Hash of the final story cast when closed
+  sessionStatus: text("session_status").notNull().default("active"), // "active" | "closed"
   likeCount: integer("like_count").default(0),
   recastCount: integer("recast_count").default(0),
   contributorCount: integer("contributor_count").default(1),
-  maxContributions: integer("max_contributions").default(10), // Optional limit
+  maxContributions: integer("max_contributions").default(10), // Auto-close after this many comments
   weaveCastCount: integer("weave_cast_count").default(0), // Number of weave casts posted
+  commentCount: integer("comment_count").default(0), // Current number of approved comments
+  closedBy: text("closed_by"), // "auto" | "manual" 
   endedAt: timestamp("ended_at"),
   createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
   updatedAt: timestamp("updated_at").default(sql`CURRENT_TIMESTAMP`),
@@ -107,9 +111,13 @@ export const insertUserSchema = createInsertSchema(users).omit({
 
 export const insertStorySchema = createInsertSchema(stories).omit({
   id: true,
+  finalContent: true,
+  finalCastHash: true,
   likeCount: true,
   recastCount: true,
   contributorCount: true,
+  commentCount: true,
+  closedBy: true,
   endedAt: true,
   createdAt: true,
   updatedAt: true,

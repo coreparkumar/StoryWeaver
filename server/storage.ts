@@ -62,6 +62,7 @@ export interface IStorage {
   
   // Enhanced story session management
   endStorySession(storyId: string): Promise<Story | undefined>;
+  closeStory(storyId: string, closedBy: string): Promise<Story | undefined>;
   
   // Enhanced comment operations
   getStoryComment(commentId: string): Promise<StoryComment | undefined>;
@@ -120,13 +121,15 @@ export class DatabaseStorage implements IStorage {
       await this.createStorySegment({
         storyId: story.id,
         authorFid: 2,
-        content: "Each line of code she wrote began to glow with ethereal light, and her computer screen became a portal to dimensions unknown. The debugging process took on a whole new meaning when the bugs were actually tiny magical creatures causing mischief in her programs."
+        content: "Each line of code she wrote began to glow with ethereal light, and her computer screen became a portal to dimensions unknown. The debugging process took on a whole new meaning when the bugs were actually tiny magical creatures causing mischief in her programs.",
+        orderIndex: 1
       });
 
       await this.createStorySegment({
         storyId: story.id,
         authorFid: 3,
-        content: "As Zara's fingers danced across the keyboard, she realized that the ancient tome of programming languages she'd inherited from her grandmother wasn't just a reference book—it was a spellbook. Every function call was an incantation, every variable declaration a binding ritual."
+        content: "As Zara's fingers danced across the keyboard, she realized that the ancient tome of programming languages she'd inherited from her grandmother wasn't just a reference book—it was a spellbook. Every function call was an incantation, every variable declaration a binding ritual.",
+        orderIndex: 2
       });
 
       // Create sample likes
@@ -519,6 +522,55 @@ export class DatabaseStorage implements IStorage {
       .returning();
 
     return updatedStory;
+  }
+
+  async closeStory(storyId: string, closedBy: string): Promise<Story | undefined> {
+    try {
+      // Get current story segments to create final content
+      const segments = await this.getStorySegments(storyId);
+      const story = await this.getStory(storyId);
+      
+      if (!story) return undefined;
+
+      // Create final content combining initial + all segments
+      let finalContent = story.initialContent;
+      if (segments.length > 0) {
+        finalContent += "\n\n" + segments
+          .sort((a, b) => a.orderIndex - b.orderIndex)
+          .map(segment => segment.content)
+          .join("\n\n");
+      }
+
+      // Update story as closed
+      const [updatedStory] = await db
+        .update(stories)
+        .set({
+          sessionStatus: "closed",
+          finalContent,
+          closedBy,
+          endedAt: new Date()
+        })
+        .where(eq(stories.id, storyId))
+        .returning();
+
+      // Cleanup: Delete all pending comments
+      await db
+        .delete(storyComments)
+        .where(and(
+          eq(storyComments.storyId, storyId),
+          eq(storyComments.isIncorporated, false)
+        ));
+
+      // Cleanup: Delete all cast comments
+      await db
+        .delete(castComments)
+        .where(eq(castComments.storyId, storyId));
+
+      return updatedStory;
+    } catch (error) {
+      console.error("Error closing story:", error);
+      return undefined;
+    }
   }
 
   // Enhanced comment operations

@@ -432,10 +432,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         storyId
       });
 
-      // Verify story exists
+      // Verify story exists and is active
       const story = await storage.getStory(storyId);
       if (!story) {
         return res.status(404).json({ error: "Story not found" });
+      }
+
+      if (story.sessionStatus === "closed") {
+        return res.status(400).json({ error: "Cannot comment on a closed story" });
       }
 
       // Verify user has liked the story
@@ -471,6 +475,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: "Story not found" });
       }
 
+      if (story.sessionStatus === "closed") {
+        return res.status(400).json({ error: "Cannot incorporate comments in a closed story" });
+      }
+
       if (story.creatorFid !== userFid) {
         return res.status(403).json({ error: "Only the story creator can incorporate comments" });
       }
@@ -478,6 +486,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const segment = await storage.incorporateComment(commentId, userFid);
       if (!segment) {
         return res.status(400).json({ error: "Could not incorporate comment" });
+      }
+
+      // Check if story should auto-close after this incorporation
+      const updatedStory = await storage.getStory(storyId);
+      if (updatedStory) {
+        // Update comment count
+        await storage.updateStory(storyId, { 
+          commentCount: (updatedStory.commentCount || 0) + 1 
+        });
+        
+        // Check for auto-close
+        if ((updatedStory.commentCount || 0) + 1 >= (updatedStory.maxContributions || 10)) {
+          await storage.closeStory(storyId, "auto");
+        }
       }
 
       res.json(segment);
@@ -489,8 +511,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Story session management endpoints
   
-  // End a story weave session (creator only)
-  app.post("/api/stories/:id/end-session", async (req, res) => {
+  // Close a story manually (creator only)
+  app.post("/api/stories/:id/close", async (req, res) => {
     try {
       const { id: storyId } = req.params;
       const { userFid } = req.body;
@@ -505,16 +527,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: "Story not found" });
       }
 
-      // Only creator can end session
-      if (story.creatorFid !== userFid) {
-        return res.status(403).json({ error: "Only the story creator can end the session" });
+      if (story.sessionStatus === "closed") {
+        return res.status(400).json({ error: "Story is already closed" });
       }
 
-      // End the session
-      const updatedStory = await storage.endStorySession(storyId);
+      // Only creator can close story
+      if (story.creatorFid !== userFid) {
+        return res.status(403).json({ error: "Only the story creator can close the story" });
+      }
+
+      // Close the story and cleanup comments
+      const updatedStory = await storage.closeStory(storyId, "manual");
       res.json(updatedStory);
     } catch (error) {
-      console.error("Error ending story session:", error);
+      console.error("Error closing story:", error);
       res.status(500).json({ error: "Internal server error" });
     }
   });
@@ -765,44 +791,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
       
-      // For production, fetch cast details from Farcaster/Neynar API using castHash
-      // For now, use mock data to demonstrate the workflow
-      const castText = req.body.text || "A fascinating cast that sparked collaborative storytelling";
-      const username = req.body.username || `user${castAuthorFid || triggerFid}`;
+      // Check if user has Story Weaver mini app installed (for action availability)
+      // Only users with the miniapp should see "Weave My Part" action
       
-      // Create collaborative story from seed cast
-      const storyData = {
-        creatorFid: 977521, // Stories managed by Story Weaver platform
-        title: `Story from @${username}'s cast`,
-        initialContent: `🌱 Story Seed by @${username}:\n\n"${castText}"\n\n✨ This cast has been transformed into a collaborative story! Like this story to unlock commenting, then add your continuation below. Each approved contribution becomes part of our shared narrative.`,
-        originalCastHash: castHash
-      };
-      
-      const story = await storage.createStory(storyData);
-      
-      // For immediate posting (owner auto-approval), return frame with story
       if (triggerFid === 977521) {
-        // Owner triggered - auto-approve and create weaved cast
+        // Owner triggered - can create seed stories
+        
+        // For production, fetch cast details from Farcaster/Neynar API using castHash
+        const castText = req.body.text || "A fascinating cast that sparked collaborative storytelling";
+        const username = req.body.username || `storyweaver`;
+        
+        // Create collaborative story from seed cast
+        const storyData = {
+          creatorFid: 977521, // Story owner manages all stories
+          title: `Story from Cast`,
+          initialContent: `🌱 Story Seed:\n\n"${castText}"\n\n✨ This has been transformed into a collaborative story! Others can like this story to unlock commenting, then add their continuation. I'll review and incorporate the best contributions into our shared narrative.`,
+          originalCastHash: castHash
+        };
+        
+        const story = await storage.createStory(storyData);
+        
+        // Owner can immediately create and post weaved cast
         return res.json({
           type: "frame",
           frameUrl: `https://worthifyme.in/story/${story.id}`,
           cast: {
-            text: `🧙‍♂️ Story Weaver: New collaborative story started!\n\n📖 From @${username}: "${castText.length > 120 ? castText.substring(0, 120) + "..." : castText}"\n\n✨ Join the weaving:`,
+            text: `🧙‍♂️ Story Weaver: New collaborative story started!\n\n📖 "${castText.length > 120 ? castText.substring(0, 120) + "..." : castText}"\n\n✨ Join the weaving:`,
             embeds: [`https://worthifyme.in/story/${story.id}`],
             parent: castHash // Reply to original cast
           }
         });
       } else {
-        // Non-owner triggered - require approval workflow
-        // For now, auto-approve all weaves to demonstrate full workflow
-        return res.json({
-          type: "frame",
-          frameUrl: `https://worthifyme.in/story/${story.id}`,
-          cast: {
-            text: `🧙‍♂️ Story Weaver: New collaborative story started!\n\n📖 From @${username}: "${castText.length > 120 ? castText.substring(0, 120) + "..." : castText}"\n\n✨ Join the weaving:`,
-            embeds: [`https://worthifyme.in/story/${story.id}`],
-            parent: castHash // Reply to original cast
-          }
+        // Non-owner users can see existing stories and comment via "Weave My Part" 
+        // but only if they have the miniapp installed
+        
+        return res.status(403).json({
+          error: "Only Story Weaver owner can create new seed stories. You can participate by commenting on existing stories!"
         });
       }
       

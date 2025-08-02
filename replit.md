@@ -6,6 +6,17 @@ Story Weaver is a collaborative storytelling platform built as a Farcaster Mini 
 
 ## Recent Changes
 
+**February 2, 2025**
+- **Corrected Cast Action Workflow**: Fixed cast action to only appear for users who install the miniapp, not universally
+- **Owner-Only Story Creation**: Only FID 977521 (owner) can create new seed stories using "Weave My Part" action
+- **Story Lifecycle Management**: Added proper story closure system with auto-close after 10 comments and manual closure by owner
+- **Database Cleanup Optimization**: Implemented cleanup of comments and cast comments when stories are closed
+- **Final Story Content**: Stories now generate final content combining initial content + all incorporated segments
+- **Installation URL Fix**: Fixed Warpcast installation URL format from API endpoint to proper warpcast.com format
+- **Miniapp-Scoped Actions**: Actions now only appear for users who have added the Story Weaver miniapp
+- **Comment Status Validation**: Added checks to prevent commenting on closed stories
+- **Auto-Close Trigger**: Stories automatically close after reaching maximum contributions (10 comments)
+
 **February 1, 2025**
 - **Documentation Organization**: Moved all documentation files to `Documentation/` folder for better structure
 - **Resource Index**: Created comprehensive RESOURCES.md with all images, assets, URLs, and external dependencies

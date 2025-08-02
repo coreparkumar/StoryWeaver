@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Heart, MessageSquare, Users, Clock, Share } from "lucide-react";
+import { Heart, MessageSquare, Users, Clock, Share, MessageCircle } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { useFarcaster } from "@/hooks/use-farcaster";
 import { useToast } from "@/hooks/use-toast";
@@ -76,7 +76,8 @@ export function StoryCard({ story, currentUser }: StoryCardProps) {
 
   const isCreator = user && story.creatorFid === user.fid;
   const canComment = user && story.hasLiked && story.sessionStatus === "active";
-  const sessionEnded = story.sessionStatus === "ended";
+  const sessionEnded = story.sessionStatus === "ended" || story.sessionStatus === "closed";
+  const sessionClosed = story.sessionStatus === "closed";
 
   return (
     <div className="space-y-6">
@@ -101,7 +102,7 @@ export function StoryCard({ story, currentUser }: StoryCardProps) {
             </div>
             <div className="flex items-center space-x-2">
               <Badge variant={sessionEnded ? "secondary" : "default"}>
-                {sessionEnded ? "Completed" : "Active"}
+                {sessionClosed ? "🔒 Closed" : sessionEnded ? "✅ Completed" : "🌟 Active"}
               </Badge>
               {isCreator && (
                 <Badge variant="outline" className="border-fc-purple text-fc-purple">
@@ -166,6 +167,13 @@ export function StoryCard({ story, currentUser }: StoryCardProps) {
                 <span>{story.segments.length} parts</span>
               </div>
 
+              {story.sessionStatus === "active" && (
+                <div className="flex items-center space-x-2 text-gray-500">
+                  <MessageCircle className="w-4 h-4" />
+                  <span>{story.commentCount || 0}/{story.maxContributions || 10} comments</span>
+                </div>
+              )}
+
               {!sessionEnded && (
                 <div className="flex items-center space-x-2 text-gray-500">
                   <Clock className="w-4 h-4" />
@@ -197,11 +205,28 @@ export function StoryCard({ story, currentUser }: StoryCardProps) {
             </div>
           </div>
 
-          {/* Session ended message */}
-          {sessionEnded && (
-            <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 text-center">
-              <p className="text-sm text-gray-600">
-                This collaborative story session has ended. No new contributions can be added.
+          {/* Session ended/closed message */}
+          {sessionClosed && (
+            <div className="p-4 bg-purple-50 rounded-lg border border-purple-200">
+              <div className="flex items-center space-x-2 text-purple-700">
+                <MessageCircle className="w-4 h-4" />
+                <span className="font-medium">Story Closed</span>
+              </div>
+              <p className="text-sm text-purple-600 mt-1">
+                This story reached {story.maxContributions || 10} comments and has been automatically closed. 
+                {story.closedBy === "auto" ? " Final story compiled!" : " Manually closed by creator."}
+              </p>
+            </div>
+          )}
+          
+          {sessionEnded && !sessionClosed && (
+            <div className="p-4 bg-gray-50 rounded-lg border">
+              <div className="flex items-center space-x-2 text-gray-600">
+                <Clock className="w-4 h-4" />
+                <span className="font-medium">Story Complete</span>
+              </div>
+              <p className="text-sm text-gray-500 mt-1">
+                This collaborative story has been completed. Thank you to all contributors!
               </p>
             </div>
           )}
