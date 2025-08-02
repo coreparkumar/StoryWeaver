@@ -6,6 +6,31 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
+// Enhanced CORS middleware with debugging
+app.use((req, res, next) => {
+  const origin = req.get('Origin') || req.get('Referer') || 'unknown';
+  
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
+  res.setHeader('Access-Control-Allow-Credentials', 'false');
+  res.setHeader('Access-Control-Max-Age', '86400');
+  
+  // Debug CORS requests
+  if (req.method === 'OPTIONS') {
+    console.log(`CORS preflight: ${origin} → ${req.path}`);
+    res.status(200).end();
+    return;
+  }
+  
+  // Log cross-origin requests for debugging
+  if (origin !== 'unknown' && !origin.includes('localhost') && !origin.includes('worthifyme.in')) {
+    console.log(`Cross-origin: ${origin} → ${req.method} ${req.path}`);
+  }
+  
+  next();
+});
+
 app.use((req, res, next) => {
   const start = Date.now();
   const path = req.path;

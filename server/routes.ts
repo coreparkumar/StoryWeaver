@@ -72,6 +72,53 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json(manifest);
   });
 
+  // Image proxy endpoint to solve CORS issues
+  app.get("/api/proxy/image", async (req, res) => {
+    try {
+      const { url } = req.query;
+      
+      if (!url || typeof url !== 'string') {
+        return res.status(400).json({ error: "URL parameter required" });
+      }
+
+      console.log(`Image proxy request for: ${url}`);
+      
+      // Validate URL to prevent SSRF
+      const validDomains = ['i.imgur.com', 'wrpcd.net', 'imagedelivery.net', 'githubusercontent.com'];
+      const urlObj = new URL(url);
+      
+      if (!validDomains.some(domain => urlObj.hostname.includes(domain))) {
+        return res.status(403).json({ error: "Domain not allowed" });
+      }
+
+      const response = await fetch(url);
+      
+      if (!response.ok) {
+        return res.status(response.status).json({ error: "Failed to fetch image" });
+      }
+
+      const contentType = response.headers.get('content-type');
+      if (!contentType?.startsWith('image/')) {
+        return res.status(400).json({ error: "URL does not point to an image" });
+      }
+
+      // Set CORS headers
+      res.setHeader('Access-Control-Allow-Origin', '*');
+      res.setHeader('Content-Type', contentType);
+      res.setHeader('Cache-Control', 'public, max-age=3600');
+      
+      const imageBuffer = await response.arrayBuffer();
+      res.send(Buffer.from(imageBuffer));
+      
+    } catch (error) {
+      console.error("Image proxy error:", error);
+      res.status(500).json({ 
+        error: "Image proxy failed",
+        details: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
   // Cast Action Installation Endpoint
   app.get("/api/cast-actions", (req, res) => {
     res.setHeader('Content-Type', 'application/json');
@@ -789,7 +836,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.setHeader('Access-Control-Allow-Origin', '*');
       res.setHeader('Content-Type', 'application/json');
       
-      console.log("Raw Farcaster action request:", JSON.stringify(req.body, null, 2));
+      console.log("=== Cast Action Request Debug ===");
+      console.log("Headers:", JSON.stringify(req.headers, null, 2));
+      console.log("Body:", JSON.stringify(req.body, null, 2));
+      console.log("Content-Type:", req.get('Content-Type'));
+      console.log("Origin:", req.get('Origin'));
+      console.log("================================");
       
       // Parse Farcaster action payload according to specification
       const { untrustedData, trustedData } = req.body;
@@ -876,10 +928,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
     } catch (error) {
-      console.error("Error in Story Weaver action handler:", error);
+      console.error("=== Cast Action Error Debug ===");
+      console.error("Error:", error);
+      console.error("Stack:", error instanceof Error ? error.stack : 'No stack trace');
+      console.error("Request body:", JSON.stringify(req.body, null, 2));
+      console.error("Request headers:", JSON.stringify(req.headers, null, 2));
+      console.error("===============================");
+      
       res.status(500).json({ 
         error: "Story weaving failed",
-        details: error instanceof Error ? error.message : "Unknown error"
+        details: error instanceof Error ? error.message : "Unknown error",
+        debug: process.env.NODE_ENV === 'development' ? {
+          stack: error instanceof Error ? error.stack : null,
+          body: req.body,
+          headers: req.headers
+        } : undefined
       });
     }
   });

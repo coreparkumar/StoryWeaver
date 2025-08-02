@@ -46,9 +46,6 @@ export default function InstallAction() {
               <li>4. Install the Story Weaver miniapp first (required)</li>
               <li>5. Start using "Weave My Part" on any cast!</li>
             </ol>
-            <p className="text-xs text-green-700 mt-2">
-              ✅ Fixed metadata format per Farcaster spec (removed postUrl, added CORS)
-            </p>
           </div>
           <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
             <h3 className="font-semibold text-purple-900 mb-2">What this action does:</h3>
