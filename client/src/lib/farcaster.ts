@@ -97,8 +97,13 @@ export const initializeFarcasterSDK = async (): Promise<FarcasterSDK> => {
               getToken: sdk.quickAuth.getToken
             } : undefined
           };
-        } catch (sdkError) {
-          console.warn("Failed to load Farcaster SDK, using mock:", sdkError);
+        } catch (sdkError: any) {
+          // Suppress expected CSP and network errors in Farcaster iframe environment
+          if (!sdkError?.message?.includes('Content Security Policy') && 
+              !sdkError?.message?.includes('client.farcaster.xyz') &&
+              !sdkError?.message?.includes('404')) {
+            console.warn("Failed to load Farcaster SDK, using mock:", sdkError);
+          }
           return createMockSDK();
         }
       }

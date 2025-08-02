@@ -92,5 +92,6 @@ The codebase includes comprehensive documentation for non-technical users:
 *   **Documentation/FUNCTION_MAPPING.md**: Shows exactly which functions are in which files for easy code navigation
 *   **Documentation/test-action.md**: Contains testing information for the Farcaster cast action
 *   **Documentation/GITHUB_PRIVACY_GUIDE.md**: Instructions for making the GitHub repository private
+*   **Documentation/TROUBLESHOOTING.md**: Common issues and solutions, including expected browser errors
 
 These documents help stakeholders understand the technical implementation without requiring coding knowledge.

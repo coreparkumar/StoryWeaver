@@ -66,8 +66,10 @@ export function FarcasterProvider({ children }: { children: ReactNode }) {
           const savedUser = await response.json();
           setUser(savedUser);
         } catch (neynarError: any) {
-          // Suppress expected CSP errors in Farcaster iframe environment
-          if (!neynarError?.message?.includes('Content Security Policy')) {
+          // Suppress expected CSP and network errors in Farcaster iframe environment
+          if (!neynarError?.message?.includes('Content Security Policy') && 
+              !neynarError?.message?.includes('client.farcaster.xyz') &&
+              !neynarError?.message?.includes('404')) {
             console.warn("Failed to fetch from Neynar, using SDK data:", neynarError);
           }
           
