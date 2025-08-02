@@ -41,13 +41,9 @@ export function CastStoriesDashboard({ userFid }: CastStoriesDashboardProps) {
   }
 
   const { data: castStories = [], isLoading } = useQuery<CastStoryWithMeta[]>({
-    queryKey: ['/api/cast-stories'],
-    queryFn: async () => {
-      const response = await apiRequest('GET', `/api/cast-stories?creatorFid=${userFid}`);
-      return response.json();
-    },
-    refetchInterval: 10000, // Refresh every 10 seconds
+    queryKey: ['/api/cast-stories', `creatorFid=${userFid}`],
     enabled: !!user,
+    refetchInterval: 10000, // Refresh every 10 seconds
   });
 
   const closeStoryMutation = useMutation({
