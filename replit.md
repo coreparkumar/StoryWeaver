@@ -3,6 +3,14 @@
 ## Overview
 Story Weaver is a collaborative storytelling platform implemented as a Farcaster Mini App. It enables users to co-create stories, leveraging a like-based permission system where liking a story grants writing privileges. The platform integrates a React frontend with an Express backend, utilizing PostgreSQL for data persistence and deeply integrating with Farcaster's social features for a native social collaboration experience. The business vision is to foster creative expression and community engagement within the Farcaster ecosystem, offering a unique social storytelling experience.
 
+## AI Development Prompts Collection
+### Core Architecture Prompts
+1. **Full-Stack Setup**: "Build a Farcaster Mini App with TypeScript React frontend, Express.js backend, PostgreSQL with Drizzle ORM, and shadcn/ui components. Include proper routing with Wouter and TanStack Query for state management."
+
+2. **Farcaster Integration**: "Integrate Farcaster Mini App SDK for user authentication, implement cast actions with proper metadata endpoints, and add Neynar API integration for enhanced user data."
+
+3. **Database Schema**: "Design a collaborative content system with users, stories, story segments, comments, likes (for permissions), locks (for editing), and cast comments tables with proper relations."
+
 ## User Preferences
 Preferred communication style: Simple, everyday language.
 Farcaster FID: 977521 (authorized for story creation)
@@ -35,6 +43,27 @@ The application uses a full-stack monorepo structure with `client/` (React, Vite
     *   **User Authentication:** Farcaster Mini App SDK provides user context, which is stored/updated in the local database. Enhanced user data is fetched from Neynar API.
     *   **Story Interaction:** Users like a story to gain commenting privileges. Submitted story parts are tracked as comments for creator review. Approved comments become `storySegments`.
 *   **UI/UX:** Uses shadcn/ui for components and TailwindCSS for styling, with custom Farcaster brand color variables. Promotional assets (images, icons) are integrated for marketing and app discovery within Farcaster.
+
+### Feature Implementation Prompts
+4. **Cast Actions**: "Create a Farcaster cast action that transforms any cast into collaborative content. Include GET metadata endpoint returning proper JSON with name, icon (valid octicon), description, aboutUrl, and action type. Add POST handler for action execution with frame responses."
+
+5. **Permission System**: "Implement a like-based permission system where users must like content to unlock contribution privileges. Track permissions in database and enforce in UI/API."
+
+6. **Collaborative Editing**: "Build a writing lock system to prevent simultaneous editing conflicts. Include 1-minute timeouts, lock acquisition/release, and UI indicators."
+
+7. **Content Moderation**: "Create admin dashboard for content creators to approve/decline user submissions. Include pending state management and automatic story closure after defined limits."
+
+### Technical Infrastructure Prompts
+8. **CORS & Security**: "Configure proper CORS headers for Farcaster iframe environment, handle CSP violations gracefully, and suppress expected browser console errors from restricted APIs."
+
+9. **Real-time Updates**: "Implement WebSocket connections for live collaboration features, ensuring proper connection management and error handling."
+
+10. **Error Handling**: "Add comprehensive error boundaries, API error handling, and user-friendly error messages throughout the application."
+
+### Deployment & Production Prompts
+11. **Farcaster Manifest**: "Create proper Farcaster mini app manifest with correct metadata, splash screens, and action configurations for app directory listing."
+
+12. **Production Optimization**: "Optimize for Replit deployment with proper environment variables, database connections, and caching strategies."
 
 ## External Dependencies
 
