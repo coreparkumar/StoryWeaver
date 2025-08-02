@@ -14,6 +14,7 @@ Story Weaver is a collaborative storytelling platform implemented as a Farcaster
 ## User Preferences
 Preferred communication style: Simple, everyday language.
 Farcaster FID: 977521 (authorized for story creation)
+Repository access: Private (GitHub repository should be private for code protection)
 
 ## System Architecture
 The application uses a full-stack monorepo structure with `client/` (React, Vite), `server/` (Express.js), and `shared/` (common TypeScript types) directories, enabling type safety across the entire application.
@@ -86,9 +87,10 @@ The application uses a full-stack monorepo structure with `client/` (React, Vite
 
 The codebase includes comprehensive documentation for non-technical users:
 
-*   **CODE_STRUCTURE.md**: Explains the overall architecture and which files handle which features
-*   **API_REFERENCE.md**: Documents all API endpoints and data flows in simple terms
-*   **FUNCTION_MAPPING.md**: Shows exactly which functions are in which files for easy code navigation
-*   **test-action.md**: Contains testing information for the Farcaster cast action
+*   **Documentation/CODE_STRUCTURE.md**: Explains the overall architecture and which files handle which features
+*   **Documentation/API_REFERENCE.md**: Documents all API endpoints and data flows in simple terms
+*   **Documentation/FUNCTION_MAPPING.md**: Shows exactly which functions are in which files for easy code navigation
+*   **Documentation/test-action.md**: Contains testing information for the Farcaster cast action
+*   **Documentation/GITHUB_PRIVACY_GUIDE.md**: Instructions for making the GitHub repository private
 
 These documents help stakeholders understand the technical implementation without requiring coding knowledge.
