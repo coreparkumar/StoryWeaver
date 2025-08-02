@@ -27,13 +27,21 @@ export function CreatorDashboard({ story }: CreatorDashboardProps) {
   }
 
   const { data: pendingComments = [], isLoading } = useQuery<(StoryComment & { author: User })[]>({
-    queryKey: ['/api/stories', story.id, 'comments'],
+    queryKey: ['/api/stories', story.id, 'pending-comments'],
+    queryFn: async () => {
+      const response = await apiRequest('GET', `/api/stories/${story.id}/pending-comments?userFid=${user.fid}`);
+      return response.json();
+    },
     refetchInterval: 10000, // Refresh every 10 seconds
     enabled: !!user,
   });
 
   const { data: castComments = [] } = useQuery<CastComment[]>({
     queryKey: ['/api/stories', story.id, 'cast-comments', 'pending'],
+    queryFn: async () => {
+      const response = await apiRequest('GET', `/api/stories/${story.id}/cast-comments?status=pending`);
+      return response.json();
+    },
     refetchInterval: 5000,
     enabled: !!user,
   });
