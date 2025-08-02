@@ -104,10 +104,11 @@ export function CastStoriesDashboard({ userFid }: CastStoriesDashboardProps) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/cast-stories'] });
-      Object.keys(queryClient.getQueryCache().queries).forEach(key => {
-        if (key.includes('pending-comments')) {
-          queryClient.invalidateQueries({ queryKey: [key] });
-        }
+      // Invalidate all pending comments queries
+      queryClient.invalidateQueries({ 
+        predicate: query => 
+          Array.isArray(query.queryKey) && 
+          query.queryKey.includes('pending-comments')
       });
       toast({
         title: "Comment Approved",
@@ -133,10 +134,11 @@ export function CastStoriesDashboard({ userFid }: CastStoriesDashboardProps) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/cast-stories'] });
-      Object.keys(queryClient.getQueryCache().queries).forEach(key => {
-        if (key.includes('pending-comments')) {
-          queryClient.invalidateQueries({ queryKey: [key] });
-        }
+      // Invalidate all pending comments queries
+      queryClient.invalidateQueries({ 
+        predicate: query => 
+          Array.isArray(query.queryKey) && 
+          query.queryKey.includes('pending-comments')
       });
       toast({
         title: "Comment Rejected",
@@ -177,17 +179,26 @@ export function CastStoriesDashboard({ userFid }: CastStoriesDashboardProps) {
     setExpandedRows(newExpanded);
   };
 
-  const usePendingComments = (storyId: string, enabled: boolean) => {
-    return useQuery<PendingCommentsData>({
-      queryKey: ['/api/stories', storyId, 'pending-comments'],
+  // Create queries for all stories to avoid conditional hook calls
+  const pendingCommentsQueries = castStories.map(story => ({
+    storyId: story.id,
+    query: useQuery<PendingCommentsData>({
+      queryKey: ['/api/stories', story.id, 'pending-comments'],
       queryFn: async () => {
-        const response = await apiRequest('GET', `/api/stories/${storyId}/pending-comments?creatorFid=${userFid}`);
+        const url = `/api/stories/${story.id}/pending-comments?creatorFid=${userFid}`;
+        const response = await fetch(url, {
+          credentials: "include",
+        });
+        if (!response.ok) {
+          const text = await response.text();
+          throw new Error(`${response.status}: ${text}`);
+        }
         return response.json();
       },
-      enabled,
-      refetchInterval: 5000, // Refresh every 5 seconds when expanded
-    });
-  };
+      enabled: expandedRows.has(story.id),
+      refetchInterval: expandedRows.has(story.id) ? 5000 : false,
+    })
+  }));
 
   return (
     <Card className="border-fc-purple/20">
@@ -230,8 +241,8 @@ export function CastStoriesDashboard({ userFid }: CastStoriesDashboardProps) {
               <TableBody>
                 {castStories.map((story, index) => {
                   const isExpanded = expandedRows.has(story.id);
-                  const pendingComments = usePendingComments(story.id, isExpanded);
-                  const totalPendingCount = (pendingComments.data?.storyComments.length || 0) + (pendingComments.data?.castComments.length || 0);
+                  const pendingComments = pendingCommentsQueries.find(q => q.storyId === story.id)?.query;
+                  const totalPendingCount = (pendingComments?.data?.storyComments.length || 0) + (pendingComments?.data?.castComments.length || 0);
                   
                   return (
                     <>
@@ -368,7 +379,7 @@ export function CastStoriesDashboard({ userFid }: CastStoriesDashboardProps) {
                         <TableRow key={`${story.id}-expanded`}>
                           <TableCell colSpan={8} className="bg-gray-50 p-0">
                             <div className="p-4">
-                              {pendingComments.isLoading ? (
+                              {pendingComments?.isLoading ? (
                                 <div className="text-center py-4 text-gray-500">Loading pending comments...</div>
                               ) : totalPendingCount === 0 ? (
                                 <div className="text-center py-4 text-gray-500">No pending comments</div>
@@ -377,7 +388,7 @@ export function CastStoriesDashboard({ userFid }: CastStoriesDashboardProps) {
                                   <h4 className="font-medium text-gray-900">Pending Comments & Cast Replies</h4>
                                   
                                   {/* Story Comments */}
-                                  {pendingComments.data?.storyComments.map((comment) => (
+                                  {pendingComments?.data?.storyComments.map((comment) => (
                                     <div key={comment.id} className="bg-white p-3 rounded-lg border border-gray-200">
                                       <div className="flex items-start justify-between">
                                         <div className="flex items-start gap-3 flex-1">
@@ -423,7 +434,7 @@ export function CastStoriesDashboard({ userFid }: CastStoriesDashboardProps) {
                                   ))}
                                   
                                   {/* Cast Comments */}
-                                  {pendingComments.data?.castComments.map((comment) => (
+                                  {pendingComments?.data?.castComments.map((comment) => (
                                     <div key={comment.id} className="bg-white p-3 rounded-lg border border-gray-200">
                                       <div className="flex items-start justify-between">
                                         <div className="flex items-start gap-3 flex-1">
