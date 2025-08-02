@@ -35,20 +35,9 @@ export function CastStoriesDashboard({ userFid }: CastStoriesDashboardProps) {
   const queryClient = useQueryClient();
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
 
-  // Debug logging
-  console.log('CastStoriesDashboard - user:', user);
-  console.log('CastStoriesDashboard - userFid:', userFid);
-  console.log('CastStoriesDashboard - user?.fid:', user?.fid);
-
   // Only show to authorized owner
   if (!user || userFid !== 977521) {
-    console.log('CastStoriesDashboard - Not showing dashboard: user missing or not authorized');
-    return (
-      <div className="text-center py-8 text-gray-500">
-        <p>Dashboard access restricted to Story Weaver owner</p>
-        <p className="text-sm mt-1">User: {user ? `FID ${user.fid}` : 'Not logged in'}</p>
-      </div>
-    );
+    return null;
   }
 
   const { data: castStories = [], isLoading } = useQuery<CastStoryWithMeta[]>({
