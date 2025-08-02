@@ -6,6 +6,14 @@ Story Weaver is a collaborative storytelling platform built as a Farcaster Mini 
 
 ## Recent Changes
 
+**February 1, 2025**
+- **Cast Action Deployment Success**: Successfully deployed Story Weaver to production at https://worthifyme.in/
+- **Action Handler Verification**: Confirmed `/api/cast-actions/weave-story` POST endpoint working correctly on production
+- **Farcaster Meta Tags Fixed**: Updated embed meta tags to use proper Story Weaver promotional assets
+- **Installation Endpoint Live**: Cast action installation working at `https://worthifyme.in/api/cast-actions`
+- **Manifest Verification**: All Farcaster Mini App manifest components properly configured and accessible
+- **Cast Action Ready**: "Weave My Part" action now available for installation and use in Farcaster ecosystem
+
 **January 31, 2025**
 - **Cast Action Installation System**: Added proper Cast Action installation endpoint at `/api/cast-actions` for users to install "Weave My Part" action
 - **Installation Page**: Created dedicated `/install-action` page with user-friendly installation flow and clear instructions
