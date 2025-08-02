@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ExternalLink, Wand2 } from "lucide-react";
+import { ExternalLink, Wand2, RefreshCw, Trash2 } from "lucide-react";
 
 export default function InstallAction() {
   // Direct metadata URL installation per Farcaster docs
@@ -9,6 +9,17 @@ export default function InstallAction() {
   const handleInstall = () => {
     // Open Warpcast installation in new window
     window.open(installUrl, '_blank');
+  };
+
+  const handleUpdate = () => {
+    // Same URL as install - Warpcast will update existing action
+    window.open(installUrl, '_blank');
+  };
+
+  const handleRemove = () => {
+    // Open Warpcast settings to manage cast actions
+    const manageUrl = "https://warpcast.com/~/settings/actions";
+    window.open(manageUrl, '_blank');
   };
 
   return (
@@ -59,21 +70,56 @@ export default function InstallAction() {
             </ol>
           </div>
           
-          <Button 
-            onClick={handleInstall}
-            className="w-full bg-purple-600 hover:bg-purple-700"
-            size="lg"
-          >
-            <ExternalLink className="w-4 h-4 mr-2" />
-            Install "Weave My Part" Action
-          </Button>
+          <div className="space-y-3">
+            <Button 
+              onClick={handleInstall}
+              className="w-full bg-purple-600 hover:bg-purple-700"
+              size="lg"
+            >
+              <ExternalLink className="w-4 h-4 mr-2" />
+              Install "Weave My Part" Action
+            </Button>
+            
+            <div className="grid grid-cols-2 gap-2">
+              <Button 
+                onClick={handleUpdate}
+                variant="outline"
+                className="border-purple-300 text-purple-700 hover:bg-purple-50"
+                size="sm"
+                title="Update to latest version of Weave My Part action"
+              >
+                <RefreshCw className="w-3 h-3 mr-1" />
+                Update Action
+              </Button>
+              
+              <Button 
+                onClick={handleRemove}
+                variant="outline"
+                className="border-red-300 text-red-700 hover:bg-red-50"
+                size="sm"
+                title="Remove action via Warpcast settings"
+              >
+                <Trash2 className="w-3 h-3 mr-1" />
+                Remove Action
+              </Button>
+            </div>
+            
+            <div className="bg-gray-50 border border-gray-200 rounded-lg p-3">
+              <h4 className="font-medium text-gray-800 text-xs mb-2">Action Management:</h4>
+              <ul className="text-xs text-gray-600 space-y-1">
+                <li>• <strong>Install:</strong> First-time setup of the action</li>
+                <li>• <strong>Update:</strong> Get latest action version (same as install)</li>
+                <li>• <strong>Remove:</strong> Opens Warpcast settings to delete action</li>
+              </ul>
+            </div>
+          </div>
           
           <div className="text-center space-y-3">
             <p className="text-xs text-gray-500">
-              This will open Warpcast to install the action
+              Install/Update will open Warpcast • Remove opens Warpcast settings
             </p>
             <p className="text-xs text-gray-400">
-              Note: Installing will replace any existing cast action you have
+              Note: Warpcast currently allows only one cast action per user
             </p>
             
             <div className="border-t pt-3">
