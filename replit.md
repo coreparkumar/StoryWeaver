@@ -7,13 +7,13 @@ Story Weaver is a collaborative storytelling platform built as a Farcaster Mini 
 ## Recent Changes
 
 **February 1, 2025**
-- **Code Documentation Complete**: Added comprehensive code documentation with feature index and implementation guides
-- **README Enhancement**: Created detailed README.md with quick start guide, architecture overview, and API reference
-- **Feature Location Map**: Added CODE_INDEX.md for easy navigation to specific features and components
-- **Implementation Guide**: Created FEATURE_DOCUMENTATION.md with deep dive technical explanations
+- **Documentation Organization**: Moved all documentation files to `Documentation/` folder for better structure
+- **Resource Index**: Created comprehensive RESOURCES.md with all images, assets, URLs, and external dependencies
+- **Documentation Complete**: Added feature index, implementation guides, and code documentation
+- **README Enhancement**: Created detailed project overview with quick start guide and architecture reference
+- **Asset Mapping**: Documented all images, icons, and resources with file locations and public URLs
 - **TypeScript Cleanup**: Fixed storage layer type errors and added proper null safety checks
-- **Comment Documentation**: Added inline documentation for key API endpoints and business logic
-- **File Organization**: Structured documentation for maintainability and onboarding
+- **File Organization**: Structured documentation for maintainability and developer onboarding
 - **Cast Action Deployment Success**: Successfully deployed Story Weaver to production at https://worthifyme.in/
 - **Action Handler Verification**: Confirmed `/api/cast-actions/weave-story` POST endpoint working correctly on production
 - **Farcaster Meta Tags Fixed**: Updated embed meta tags to use proper Story Weaver promotional assets

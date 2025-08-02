@@ -1,219 +1,74 @@
-# 🧙‍♂️ Story Weaver - Collaborative Farcaster Storytelling
+# 🧙‍♂️ Story Weaver
 
-Transform any Farcaster cast into magical collaborative stories with the power of community-driven narrative creation.
+**Collaborative Farcaster Storytelling Platform**
 
-## Quick Start
+Transform any Farcaster cast into magical collaborative stories with community-driven narrative creation.
 
-### Try Story Weaver
-1. **Install Cast Action**: Visit [worthifyme.in/install-action](https://worthifyme.in/install-action)
-2. **Use "Weave My Part"**: Click the action on any cast in Farcaster
-3. **Collaborate**: Like stories to unlock commenting, contribute to narratives
-4. **Watch Magic**: Stories grow through community collaboration
+## Quick Links
 
-### Development Setup
+- **Live App**: [worthifyme.in](https://worthifyme.in)
+- **Install Cast Action**: [worthifyme.in/install-action](https://worthifyme.in/install-action)
+- **Documentation**: [Documentation/README.md](Documentation/README.md)
+
+## What is Story Weaver?
+
+Story Weaver is a Farcaster Mini App that enables collaborative storytelling through cast actions. Users can trigger the "Weave My Part" action on any cast to transform it into a collaborative story seed, creating viral engagement loops with native Farcaster integration.
+
+## Core Features
+
+- **Universal Cast Actions**: "Weave My Part" appears on every cast in Farcaster
+- **Like-to-Comment System**: Social proof mechanism for quality control
+- **Creator Curation**: Story creators approve comments to maintain narrative quality
+- **Viral Sharing**: Weaved stories post back to Farcaster automatically
+- **Native Integration**: Seamless Farcaster SDK authentication and social features
+
+## Getting Started
+
+### For Users
+1. Visit [worthifyme.in/install-action](https://worthifyme.in/install-action)
+2. Install the "Weave My Part" cast action
+3. Use the action on any interesting cast in Farcaster
+4. Watch collaborative stories emerge from community engagement
+
+### For Developers
 ```bash
-# Install dependencies
+# Clone and install
 npm install
 
 # Set up database
 npm run db:push
 
-# Start development server
+# Start development
 npm run dev
+
+# Build for production  
+npm run build
 ```
 
-## 🌟 Features
+## Documentation
 
-### Cast Actions Integration
-- **Universal Action**: "Weave My Part" appears on every cast in Farcaster
-- **Instant Stories**: Transform any cast into a collaborative story seed
-- **Viral Loop**: Weaved stories post back to Farcaster with engagement links
+Complete documentation is available in the `Documentation/` folder:
 
-### Collaborative Writing System
-- **Like to Unlock**: Social proof system - like stories to gain commenting privileges
-- **Creator Control**: Story creators curate final content by approving comments
-- **Order Preservation**: Comments become story segments in approved sequence
-- **Writing Locks**: Prevent editing conflicts with 1-minute exclusive access
+- **[Project Overview](Documentation/README.md)** - Architecture, features, and API reference
+- **[Code Index](Documentation/CODE_INDEX.md)** - Quick feature location map
+- **[Implementation Guide](Documentation/FEATURE_DOCUMENTATION.md)** - Deep dive technical documentation  
+- **[Resources Index](Documentation/RESOURCES.md)** - Assets, images, and external resources
 
-### Farcaster Native
-- **SDK Integration**: Seamless user authentication via Farcaster identity
-- **Cast Sharing**: Direct posting back to the protocol
-- **Social Features**: Follower counts, profile pictures, verified usernames
-- **Mini App Manifest**: Proper Farcaster app registration and discoverability
+## Tech Stack
 
-## 🏗️ Architecture
-
-### Tech Stack
 - **Frontend**: React 18 + TypeScript + TailwindCSS + shadcn/ui
-- **Backend**: Express.js + TypeScript + Drizzle ORM
+- **Backend**: Express.js + TypeScript + Drizzle ORM  
 - **Database**: PostgreSQL with UUID primary keys
-- **Deployment**: Single Node.js app serving both frontend and API
+- **Deployment**: Single Node.js app on Replit
+- **Integration**: Farcaster Mini App SDK + Neynar API
 
-### Key Components
-```
-├── Cast Action Handler    # Transform casts → stories
-├── Permission System      # Like-based commenting access
-├── Collaborative Engine   # Comment approval → story segments
-├── Writing Locks         # Prevent editing conflicts
-├── Farcaster SDK         # Authentication & social features
-└── Viral Sharing         # Post weaved casts back to protocol
-```
+## Project Status
 
-## 📊 Database Schema
-
-### Core Tables
-- **users**: Farcaster profiles (FID as primary key)
-- **stories**: Collaborative story entries with metadata
-- **storySegments**: Approved story content (ordered sequence)
-- **storyComments**: Pending contributions awaiting creator approval
-- **storyLikes**: Permission system - enables commenting
-- **storyLocks**: Writing access management (1-minute duration)
-
-### Relationships
-```
-Stories → Creator (User)
-Stories → Segments (ordered content)
-Stories → Comments (pending approval)
-Stories → Likes (permission grants)
-Stories → Locks (writing access)
-```
-
-## 🔐 Security & Permissions
-
-### Authentication
-- **Farcaster SDK**: Cryptographic proof of identity
-- **No Passwords**: Leverages existing Farcaster accounts
-- **FID Primary**: Farcaster ID as user identifier
-
-### Authorization Levels
-1. **Platform Owner** (FID 977521): Create new stories
-2. **Story Creator**: Approve comments, incorporate content
-3. **Engaged Users** (liked story): Submit story comments
-4. **All Users**: View stories, like for access
-
-## 🚀 API Reference
-
-### Story Management
-```
-GET  /api/stories              # List all stories
-GET  /api/stories/:id          # Get story with contributors
-POST /api/stories              # Create story (owner only)
-POST /api/stories/:id/segments # Add story segment
-```
-
-### User Interactions
-```
-POST /api/stories/:id/like                    # Toggle like (grants permissions)
-POST /api/stories/:id/comments                # Submit comment (requires like)
-POST /api/stories/:id/comments/:id/incorporate # Approve comment (creator only)
-```
-
-### Farcaster Integration
-```
-GET  /api/cast-actions                   # Action installation endpoint
-POST /api/cast-actions/weave-story       # Cast action handler
-GET  /.well-known/farcaster.json        # Mini app manifest
-```
-
-### Writing System
-```
-POST   /api/stories/:id/lock    # Acquire writing lock
-DELETE /api/stories/:id/lock    # Release writing lock
-GET    /api/stories/:id/lock    # Check lock status
-```
-
-## 🌐 Deployment
-
-### Environment Variables
-```bash
-DATABASE_URL=postgresql://...      # PostgreSQL connection
-FARCASTER_PRIVATE_KEY=0x...       # Cast action signatures
-PORT=5000                         # Server port (default)
-```
-
-### Build Process
-```bash
-npm run build    # Builds both frontend and backend
-npm start        # Production server
-```
-
-### Farcaster Setup
-1. **Domain Verification**: `accountAssociation` signature in manifest
-2. **HTTPS Required**: Cast actions only work on deployed domains
-3. **Meta Tags**: Proper social sharing configuration
-
-## 📁 File Structure
-
-```
-story-weaver/
-├── client/                    # React frontend
-│   ├── src/
-│   │   ├── components/        # UI components
-│   │   ├── hooks/            # Custom React hooks
-│   │   ├── lib/              # Utilities & API clients
-│   │   ├── pages/            # Route components
-│   │   └── App.tsx           # Main app with routing
-│   └── public/               # Static assets & manifest
-├── server/                   # Express backend
-│   ├── routes.ts            # All API endpoints
-│   ├── storage.ts           # Database operations
-│   ├── db.ts               # Database connection
-│   └── index.ts            # Server entry point
-├── shared/                  # Common types & schema
-│   └── schema.ts           # Database schema & types
-└── Documentation
-    ├── CODE_INDEX.md         # Feature location map
-    ├── FEATURE_DOCUMENTATION.md # Deep dive guides
-    └── README.md             # This file
-```
-
-## 🔍 Find Features Quickly
-
-Use the [CODE_INDEX.md](CODE_INDEX.md) for a comprehensive feature location map, or the [FEATURE_DOCUMENTATION.md](FEATURE_DOCUMENTATION.md) for detailed implementation guides.
-
-### Common Locations
-- **Cast Actions**: `server/routes.ts:714`
-- **Like System**: `server/routes.ts:350`
-- **Farcaster SDK**: `client/src/hooks/use-farcaster.tsx`
-- **Story Pages**: `client/src/pages/story.tsx`
-- **Database Schema**: `shared/schema.ts`
-
-## 🤝 Contributing
-
-### Development Workflow
-1. **Local Development**: `npm run dev` (cast actions won't work on localhost)
-2. **Database Changes**: `npm run db:push` (no manual migrations)
-3. **Type Safety**: Shared schema ensures frontend/backend consistency
-4. **Testing**: Deploy to HTTPS domain for full cast action testing
-
-### Key Principles
-- **Social First**: Leverage Farcaster's social graph and engagement
-- **Creator Control**: Story creators curate final content quality
-- **Viral Loops**: Every interaction creates opportunities for growth
-- **Type Safety**: Comprehensive TypeScript across the full stack
-
-## 📈 Metrics & Analytics
-
-### Key Performance Indicators
-- **Cast Action Usage**: How often users trigger "Weave My Part"
-- **Story Completion**: Stories that receive ongoing engagement
-- **Viral Coefficient**: Weaved casts generating new story seeds
-- **Community Health**: Like-to-comment conversion rates
-
-## 🎯 Roadmap
-
-### Near Term
-- [ ] Creator dashboard for comment management
-- [ ] Story templates and guided creation
-- [ ] Enhanced analytics and insights
-- [ ] Community moderation tools
-
-### Future Vision
-- [ ] Real-time collaborative editing
-- [ ] AI-assisted story suggestions
-- [ ] Cross-platform story sharing
-- [ ] Monetization and creator rewards
+✅ **Production Ready** - Deployed at [worthifyme.in](https://worthifyme.in)  
+✅ **Cast Actions Live** - "Weave My Part" available in Farcaster  
+✅ **Full Documentation** - Comprehensive guides and code index  
+✅ **Type Safe** - Complete TypeScript coverage  
 
 ---
 
-Built with ❤️ for the Farcaster community. Transform your casts into collaborative stories at [worthifyme.in](https://worthifyme.in)
+Built with ❤️ for the Farcaster community by FID 977521
