@@ -73,7 +73,7 @@ export default function InstallAction() {
               This will open Warpcast to install the action
             </p>
             <p className="text-xs text-gray-400">
-              Make sure you're logged into Warpcast for installation to work
+              Note: Installing will replace any existing cast action you have
             </p>
             
             <div className="border-t pt-3">
