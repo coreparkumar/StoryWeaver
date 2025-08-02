@@ -909,32 +909,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Check if a story already exists for this cast
         const existingStory = await storage.getStoryByCastHash(castHash);
         if (existingStory) {
-          const frameHtml = `<!DOCTYPE html>
-<html>
-<head>
-  <meta property="fc:frame" content="vNext" />
-  <meta property="fc:frame:image" content="https://worthifyme.in/icon.svg" />
-  <meta property="og:image" content="https://worthifyme.in/icon.svg" />
-  <meta property="fc:frame:post_url" content="https://worthifyme.in/api/cast-actions/weave-story" />
-  <meta property="fc:frame:button:1" content="View Story" />
-  <meta property="fc:frame:button:1:action" content="link" />
-  <meta property="fc:frame:button:1:target" content="https://worthifyme.in/story/${existingStory.id}" />
-  
-  <meta property="og:title" content="Story Already Exists!" />
-  <meta property="og:description" content="🔗 Story already exists for this cast! Join the ongoing collaborative story." />
-  <meta property="og:url" content="https://worthifyme.in/story/${existingStory.id}" />
-  
-  <title>Story Already Exists</title>
-</head>
-<body>
-  <h1>🔗 Story already exists for this cast!</h1>
-  <p>📖 Join the ongoing collaborative story</p>
-  <p>✨ <a href="https://worthifyme.in/story/${existingStory.id}">Continue weaving</a></p>
-</body>
-</html>`;
-          
-          res.setHeader('Content-Type', 'text/html');
-          return res.send(frameHtml);
+          return res.json({
+            message: `🔗 Story already exists for this cast!\n\n📖 Join the ongoing collaborative story:\n\n✨ Continue weaving: https://worthifyme.in/story/${existingStory.id}`
+          });
         }
         
         // For production, fetch cast details from Farcaster/Neynar API using castHash
@@ -951,35 +928,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         const story = await storage.createStory(storyData);
         
-        // Return proper frame HTML response
-        const frameHtml = `<!DOCTYPE html>
-<html>
-<head>
-  <!-- Frame meta tags -->
-  <meta property="fc:frame" content="vNext" />
-  <meta property="fc:frame:image" content="https://worthifyme.in/icon.svg" />
-  <meta property="og:image" content="https://worthifyme.in/icon.svg" />
-  <meta property="fc:frame:post_url" content="https://worthifyme.in/api/cast-actions/weave-story" />
-  <meta property="fc:frame:button:1" content="View Story" />
-  <meta property="fc:frame:button:1:action" content="link" />
-  <meta property="fc:frame:button:1:target" content="https://worthifyme.in/story/${story.id}" />
-  
-  <!-- OpenGraph for fallback -->
-  <meta property="og:title" content="Story Weaver - New Story Created!" />
-  <meta property="og:description" content="🧙‍♂️ Story Weaver: New collaborative story started! Join the weaving." />
-  <meta property="og:url" content="https://worthifyme.in/story/${story.id}" />
-  
-  <title>Story Weaver - New Story Created</title>
-</head>
-<body>
-  <h1>🧙‍♂️ Story Weaver: New collaborative story started!</h1>
-  <p>📖 "${castText.length > 120 ? castText.substring(0, 120) + "..." : castText}"</p>
-  <p>✨ <a href="https://worthifyme.in/story/${story.id}">Join the weaving</a></p>
-</body>
-</html>`;
-        
-        res.setHeader('Content-Type', 'text/html');
-        return res.send(frameHtml);
+        // Return proper cast action JSON response
+        return res.json({
+          message: `🧙‍♂️ Story Weaver: New collaborative story started!\n\n📖 "${castText.length > 120 ? castText.substring(0, 120) + "..." : castText}"\n\n✨ Join the weaving: https://worthifyme.in/story/${story.id}`
+        });
       } else {
         // Non-owner users can comment on existing stories via "Weave My Part"
         
@@ -1013,67 +965,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
           
           await storage.addCastComment(castCommentData);
           
-          const frameHtml = `<!DOCTYPE html>
-<html>
-<head>
-  <meta property="fc:frame" content="vNext" />
-  <meta property="fc:frame:image" content="https://worthifyme.in/icon.svg" />
-  <meta property="og:image" content="https://worthifyme.in/icon.svg" />
-  <meta property="fc:frame:post_url" content="https://worthifyme.in/api/cast-actions/weave-story" />
-  <meta property="fc:frame:button:1" content="View Story" />
-  <meta property="fc:frame:button:1:action" content="link" />
-  <meta property="fc:frame:button:1:target" content="https://worthifyme.in/story/${existingStory.id}" />
-  
-  <meta property="og:title" content="Story Contribution Submitted!" />
-  <meta property="og:description" content="🎭 Your contribution has been sent for review by the story creator." />
-  <meta property="og:url" content="https://worthifyme.in/story/${existingStory.id}" />
-  
-  <title>Contribution Submitted</title>
-</head>
-<body>
-  <h1>🎭 Story contribution submitted!</h1>
-  <p>📝 Your contribution to "${existingStory.title}" has been sent for review.</p>
-  <p>⏳ The story creator will review and incorporate approved contributions.</p>
-  <p>✨ <a href="https://worthifyme.in/story/${existingStory.id}">View the story</a></p>
-</body>
-</html>`;
-          
-          res.setHeader('Content-Type', 'text/html');
-          return res.send(frameHtml);
+          return res.json({
+            message: `🎭 Story contribution submitted!\n\n📝 Your contribution to "${existingStory.title}" has been sent for review.\n\n⏳ The story creator will review and incorporate approved contributions.\n\n✨ View the story: https://worthifyme.in/story/${existingStory.id}`
+          });
         } else {
           // No existing story for this cast - suggest they can participate in existing stories
-          const frameHtml = `<!DOCTYPE html>
-<html>
-<head>
-  <meta property="fc:frame" content="vNext" />
-  <meta property="fc:frame:image" content="https://worthifyme.in/icon.svg" />
-  <meta property="og:image" content="https://worthifyme.in/icon.svg" />
-  <meta property="fc:frame:post_url" content="https://worthifyme.in/api/cast-actions/weave-story" />
-  <meta property="fc:frame:button:1" content="Explore Stories" />
-  <meta property="fc:frame:button:1:action" content="link" />
-  <meta property="fc:frame:button:1:target" content="https://worthifyme.in" />
-  
-  <meta property="og:title" content="Welcome to Story Weaver!" />
-  <meta property="og:description" content="🧙‍♂️ Welcome to Story Weaver! This cast doesn't have a story yet. Explore existing stories!" />
-  <meta property="og:url" content="https://worthifyme.in" />
-  
-  <title>Welcome to Story Weaver</title>
-</head>
-<body>
-  <h1>🧙‍♂️ Welcome to Story Weaver!</h1>
-  <p>📚 This cast doesn't have a story yet. Only the Story Weaver owner can create new story seeds.</p>
-  <p>✨ You can participate by:</p>
-  <ul>
-    <li>Liking existing stories</li>
-    <li>Adding your contributions</li>
-    <li>Helping weave collaborative tales!</li>
-  </ul>
-  <p>🔗 <a href="https://worthifyme.in">Explore stories</a></p>
-</body>
-</html>`;
-          
-          res.setHeader('Content-Type', 'text/html');
-          return res.send(frameHtml);
+          return res.json({
+            message: `🧙‍♂️ Welcome to Story Weaver!\n\n📚 This cast doesn't have a story yet. Only the Story Weaver owner can create new story seeds.\n\n✨ You can participate by:\n• Liking existing stories\n• Adding your contributions\n• Helping weave collaborative tales!\n\n🔗 Explore stories: https://worthifyme.in`
+          });
         }
       }
       
