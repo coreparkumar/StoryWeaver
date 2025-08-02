@@ -945,12 +945,58 @@ export async function registerRoutes(app: Express): Promise<Server> {
           }
         });
       } else {
-        // Non-owner users can see existing stories and comment via "Weave My Part" 
-        // but only if they have the miniapp installed
+        // Non-owner users can comment on existing stories via "Weave My Part"
         
-        return res.status(403).json({
-          error: "Only Story Weaver owner can create new seed stories. You can participate by commenting on existing stories!"
-        });
+        // Check if there's an existing story for this cast
+        const existingStory = await storage.getStoryByCastHash(castHash);
+        
+        if (existingStory) {
+          // User is contributing to an existing story
+          // For now, we'll create a generic comment that the owner can review
+          const castText = req.body.text || "Contributed to the collaborative story";
+          
+          // Create a pending comment for owner approval
+          const commentData = {
+            storyId: existingStory.id,
+            authorFid: triggerFid,
+            content: `🎭 Cast Action Contribution:\n\n"${castText}"\n\n✨ This contribution was submitted via the Weave My Part action and awaits approval to be incorporated into the story.`,
+            approvalStatus: "pending" as const,
+            castHash: castHash
+          };
+          
+          const comment = await storage.createStoryComment(commentData);
+          
+          // Also create cast comment for the enhanced workflow
+          const castCommentData = {
+            storyId: existingStory.id,
+            commentCastHash: castHash,
+            authorFid: triggerFid,
+            content: `🎭 Cast Action Contribution:\n\n"${castText}"\n\n✨ This contribution was submitted via the Weave My Part action and awaits approval to be incorporated into the story.`,
+            approvalStatus: "pending" as const
+          };
+          
+          await storage.addCastComment(castCommentData);
+          
+          return res.json({
+            type: "frame",
+            frameUrl: `https://worthifyme.in/story/${existingStory.id}`,
+            cast: {
+              text: `🎭 Story contribution submitted!\n\n📝 Your contribution to "${existingStory.title}" has been sent for review.\n\n⏳ The story creator will review and incorporate approved contributions.\n\n✨ View the story:`,
+              embeds: [`https://worthifyme.in/story/${existingStory.id}`],
+              parent: castHash
+            }
+          });
+        } else {
+          // No existing story for this cast - suggest they can participate in existing stories
+          return res.json({
+            type: "frame", 
+            frameUrl: "https://worthifyme.in",
+            cast: {
+              text: `🧙‍♂️ Welcome to Story Weaver!\n\n📚 This cast doesn't have a story yet. Only the Story Weaver owner can create new story seeds.\n\n✨ You can participate by:\n• Liking existing stories\n• Adding your contributions\n• Helping weave collaborative tales!\n\n🔗 Explore stories:`,
+              embeds: ["https://worthifyme.in"]
+            }
+          });
+        }
       }
       
     } catch (error) {

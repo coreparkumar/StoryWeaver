@@ -95,3 +95,13 @@ The codebase includes comprehensive documentation for non-technical users:
 *   **Documentation/TROUBLESHOOTING.md**: Common issues and solutions, including expected browser errors
 
 These documents help stakeholders understand the technical implementation without requiring coding knowledge.
+
+### Recent Implementation Updates
+
+**August 2, 2025 - Cast Action Integration Complete**
+- Fixed Creator Dashboard API endpoints to properly display pending comments for approval
+- Enhanced cast action workflow: non-owner users can now contribute to existing stories via "Weave My Part" action
+- When users use the cast action on existing story casts, their contributions are stored as pending comments requiring creator approval
+- Added comprehensive troubleshooting documentation for browser network errors (normal Farcaster SDK behavior)
+- System now captures cast details from user actions and stores them in database for dashboard review
+- Both story_comments and cast_comments tables populate with pending contributions awaiting approval
