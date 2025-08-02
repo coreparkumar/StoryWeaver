@@ -34,6 +34,7 @@ The application uses a full-stack monorepo structure with `client/` (React, Vite
     *   Farcaster Mini App SDK for user authentication and context.
     *   Full Farcaster Actions integration with a `weave-story` action handler for processing cast context, creating stories, and returning frame responses.
     *   Owner (FID 977521) restriction for new story creation, ensuring platform quality control.
+    *   Duplicate prevention system: prevents creating multiple stories from the same cast hash, redirects to existing story with appropriate messaging.
     *   Stories automatically close after 10 comments or can be manually closed by the owner.
     *   A like-to-comment permission system requires users to like a story to unlock writing privileges, promoting engagement.
     *   Writing locks with a 1-minute maximum duration prevent simultaneous editing conflicts.
