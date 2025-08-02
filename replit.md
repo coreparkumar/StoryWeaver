@@ -81,3 +81,14 @@ The application uses a full-stack monorepo structure with `client/` (React, Vite
     *   Radix UI for accessible component primitives.
     *   TailwindCSS for utility-first styling.
     *   Lucide Icons for consistent iconography.
+
+## Code Documentation
+
+The codebase includes comprehensive documentation for non-technical users:
+
+*   **CODE_STRUCTURE.md**: Explains the overall architecture and which files handle which features
+*   **API_REFERENCE.md**: Documents all API endpoints and data flows in simple terms
+*   **FUNCTION_MAPPING.md**: Shows exactly which functions are in which files for easy code navigation
+*   **test-action.md**: Contains testing information for the Farcaster cast action
+
+These documents help stakeholders understand the technical implementation without requiring coding knowledge.

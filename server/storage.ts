@@ -1,3 +1,28 @@
+/**
+ * Database Storage Implementation for Story Weaver
+ * 
+ * This module provides the main data storage interface for the collaborative
+ * storytelling platform. It handles all database operations and business logic
+ * for managing users, stories, comments, likes, and permissions.
+ * 
+ * Key Functions:
+ * - User management (authentication, profile storage)
+ * - Story creation and retrieval
+ * - Comment system (submission, approval, rejection)
+ * - Like-based permission system
+ * - Writing locks for collaborative editing
+ * - Story lifecycle management
+ * 
+ * Business Rules:
+ * - Only FID 977521 can create new stories
+ * - Users must like a story to comment
+ * - Story creators can approve/decline comments
+ * - Stories automatically close after 10 comments
+ * - Writing locks prevent simultaneous editing
+ * 
+ * For technical details, see CODE_STRUCTURE.md
+ */
+
 import { 
   type User, 
   type InsertUser,

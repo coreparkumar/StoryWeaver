@@ -1,3 +1,20 @@
+/**
+ * Server Routes - Main API Handler
+ * 
+ * This file contains all the API endpoints that handle requests from the frontend
+ * and external services like Farcaster. It acts as the bridge between user interactions
+ * and the database.
+ * 
+ * Key sections:
+ * - Static file serving (images, manifests)
+ * - Story management APIs
+ * - User authentication APIs
+ * - Comment and like system APIs
+ * - Farcaster cast action integration
+ * 
+ * For detailed API documentation, see API_REFERENCE.md
+ */
+
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
