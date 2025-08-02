@@ -35,8 +35,8 @@ export default function InstallAction() {
               <li>4. Install the Story Weaver miniapp first (required)</li>
               <li>5. Start using "Weave My Part" on any cast!</li>
             </ol>
-            <p className="text-xs text-amber-700 mt-2">
-              Note: Now using direct metadata URL installation format
+            <p className="text-xs text-green-700 mt-2">
+              ✅ Metadata endpoint now returns proper JSON locally - deployment update needed
             </p>
           </div>
           <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">

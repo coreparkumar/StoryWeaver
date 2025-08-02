@@ -743,7 +743,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Cast Action Metadata - Required for action installation
   app.get("/api/cast-actions/weave-story", async (req, res) => {
-    res.json({
+    res.setHeader('Content-Type', 'application/json');
+    res.status(200).json({
       name: "Weave My Part",
       icon: "paintbrush", 
       description: "Transform this cast into a collaborative story seed",
