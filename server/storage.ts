@@ -98,8 +98,10 @@ export interface IStorage {
   updateStorySharedCast(storyId: string, userFid: number, castHash: string): Promise<boolean>;
   
   // Admin dashboard operations
-  getCastStories(): Promise<(Story & { commentCount: number; createdFromCast: boolean })[]>;
+  getCastStories(): Promise<(Story & { commentCount: number; createdFromCast: boolean; castSummary: string })[]>;
   deleteStory(storyId: string): Promise<boolean>;
+  getStoryPendingComments(storyId: string): Promise<(StoryComment & { author: User })[]>;
+  getCastCommentsByStoryId(storyId: string): Promise<(CastComment & { author: User })[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -838,7 +840,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Admin dashboard operations
-  async getCastStories(): Promise<(Story & { commentCount: number; createdFromCast: boolean })[]> {
+  async getCastStories(): Promise<(Story & { commentCount: number; createdFromCast: boolean; castSummary: string })[]> {
     const castStoriesData = await db
       .select({
         story: stories,
@@ -855,7 +857,89 @@ export class DatabaseStorage implements IStorage {
     return castStoriesData.map(({ story, commentCount }) => ({
       ...story,
       commentCount,
-      createdFromCast: true
+      createdFromCast: true,
+      castSummary: this.generateCastSummary(story.title, story.initialContent)
+    }));
+  }
+
+  private generateCastSummary(title: string, content: string): string {
+    // Create a meaningful summary from the story content
+    const summary = content.length > 60 ? content.substring(0, 60) + "..." : content;
+    return `"${title}" - ${summary}`;
+  }
+
+  // Get pending comments/cast replies for a story
+  async getStoryPendingComments(storyId: string): Promise<(StoryComment & { author: User })[]> {
+    const comments = await db
+      .select({
+        id: storyComments.id,
+        storyId: storyComments.storyId,
+        authorFid: storyComments.authorFid,
+        content: storyComments.content,
+        approvalStatus: storyComments.approvalStatus,
+        isIncorporated: storyComments.isIncorporated,
+        incorporatedAt: storyComments.incorporatedAt,
+        incorporatedByFid: storyComments.incorporatedByFid,
+        castHash: storyComments.castHash,
+        sharedCastHash: storyComments.sharedCastHash,
+        notificationSent: storyComments.notificationSent,
+        createdAt: storyComments.createdAt,
+        author: {
+          id: users.id,
+          fid: users.fid,
+          username: users.username,
+          displayName: users.displayName,
+          pfpUrl: users.pfpUrl,
+          followerCount: users.followerCount
+        }
+      })
+      .from(storyComments)
+      .leftJoin(users, eq(storyComments.authorFid, users.fid))
+      .where(and(
+        eq(storyComments.storyId, storyId),
+        eq(storyComments.approvalStatus, "pending")
+      ))
+      .orderBy(desc(storyComments.createdAt));
+
+    return comments.map(comment => ({
+      ...comment,
+      author: comment.author as User
+    }));
+  }
+
+  // Get pending cast comments for a story
+  async getCastCommentsByStoryId(storyId: string): Promise<(CastComment & { author: User })[]> {
+    const comments = await db
+      .select({
+        id: castComments.id,
+        storyId: castComments.storyId,
+        commentCastHash: castComments.commentCastHash,
+        authorFid: castComments.authorFid,
+        content: castComments.content,
+        approvalStatus: castComments.approvalStatus,
+        incorporatedAt: castComments.incorporatedAt,
+        incorporatedInCastHash: castComments.incorporatedInCastHash,
+        createdAt: castComments.createdAt,
+        author: {
+          id: users.id,
+          fid: users.fid,  
+          username: users.username,
+          displayName: users.displayName,
+          pfpUrl: users.pfpUrl,
+          followerCount: users.followerCount
+        }
+      })
+      .from(castComments)
+      .leftJoin(users, eq(castComments.authorFid, users.fid))
+      .where(and(
+        eq(castComments.storyId, storyId),
+        eq(castComments.approvalStatus, "pending")
+      ))
+      .orderBy(desc(castComments.createdAt));
+
+    return comments.map(comment => ({
+      ...comment,
+      author: comment.author as User
     }));
   }
 

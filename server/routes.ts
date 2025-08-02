@@ -320,6 +320,119 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get pending comments for a specific story
+  app.get("/api/stories/:storyId/pending-comments", async (req, res) => {
+    try {
+      const { storyId } = req.params;
+      const { creatorFid } = req.query;
+      
+      if (!creatorFid || parseInt(creatorFid as string) !== 977521) {
+        return res.status(403).json({ error: "Unauthorized access to pending comments" });
+      }
+      
+      const [storyComments, castComments] = await Promise.all([
+        storage.getStoryPendingComments(storyId),
+        storage.getCastCommentsByStoryId(storyId)
+      ]);
+      
+      res.json({
+        storyComments,
+        castComments
+      });
+    } catch (error) {
+      console.error("Error fetching pending comments:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  // Approve a story comment
+  app.post("/api/comments/:commentId/approve", async (req, res) => {
+    try {
+      const { commentId } = req.params;
+      const { userFid } = req.body;
+      
+      if (!userFid || userFid !== 977521) {
+        return res.status(403).json({ error: "Only the Story Weaver owner can approve comments" });
+      }
+      
+      const result = await storage.approveAndIncorporateComment(commentId, userFid);
+      if (!result) {
+        return res.status(404).json({ error: "Comment not found or cannot be approved" });
+      }
+      
+      res.json({ success: true, comment: result.comment, segment: result.segment });
+    } catch (error) {
+      console.error("Error approving comment:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  // Reject a story comment
+  app.post("/api/comments/:commentId/reject", async (req, res) => {
+    try {
+      const { commentId } = req.params;
+      const { userFid } = req.body;
+      
+      if (!userFid || userFid !== 977521) {
+        return res.status(403).json({ error: "Only the Story Weaver owner can reject comments" });
+      }
+      
+      const result = await storage.declineComment(commentId);
+      if (!result) {
+        return res.status(404).json({ error: "Comment not found" });
+      }
+      
+      res.json({ success: true, comment: result });
+    } catch (error) {
+      console.error("Error rejecting comment:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  // Approve a cast comment
+  app.post("/api/cast-comments/:commentId/approve", async (req, res) => {
+    try {
+      const { commentId } = req.params;
+      const { userFid, weaveCastHash } = req.body;
+      
+      if (!userFid || userFid !== 977521) {
+        return res.status(403).json({ error: "Only the Story Weaver owner can approve cast comments" });
+      }
+      
+      const result = await storage.approveCastComment(commentId, userFid, weaveCastHash || `weave_${Date.now()}`);
+      if (!result) {
+        return res.status(404).json({ error: "Cast comment not found or cannot be approved" });
+      }
+      
+      res.json({ success: true, comment: result });
+    } catch (error) {
+      console.error("Error approving cast comment:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  // Reject a cast comment
+  app.post("/api/cast-comments/:commentId/reject", async (req, res) => {
+    try {
+      const { commentId } = req.params;
+      const { userFid } = req.body;
+      
+      if (!userFid || userFid !== 977521) {
+        return res.status(403).json({ error: "Only the Story Weaver owner can reject cast comments" });
+      }
+      
+      const result = await storage.declineCastComment(commentId, userFid);
+      if (!result) {
+        return res.status(404).json({ error: "Cast comment not found" });
+      }
+      
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error rejecting cast comment:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
   // Remove/delete a story (admin only)
   app.delete("/api/stories/:id", async (req, res) => {
     try {
