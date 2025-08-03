@@ -342,6 +342,16 @@ function StoryRow({
     queryFn: () => getPendingCommentsData(story.id),
     enabled: isExpanded,
     refetchInterval: isExpanded ? 5000 : false,
+    retry: (failureCount, error) => {
+      // Don't retry if story is not found (likely deleted)
+      if (error?.message?.includes('404') || error?.message?.includes('Story not found')) {
+        return false;
+      }
+      return failureCount < 3;
+    },
+    onError: (error) => {
+      console.warn(`Failed to fetch pending comments for story ${story.id}:`, error);
+    }
   });
 
   const totalPendingCount = (pendingComments.data?.storyComments.length || 0) + (pendingComments.data?.castComments.length || 0);
