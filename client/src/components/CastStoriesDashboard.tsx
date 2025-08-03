@@ -247,8 +247,43 @@ export function CastStoriesDashboard({ userFid }: CastStoriesDashboardProps) {
             <p className="text-sm mt-1">Stories will appear here when users use the "Weave My Part" action</p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <Table>
+          <>
+            {/* Latest Story Preview */}
+            {castStories.length > 0 && (
+              <Card className="mb-6 border-purple-200 bg-purple-50/50">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-lg text-purple-900">🌱 Latest Story Seed</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    <h4 className="font-semibold text-purple-800">{castStories[0].title}</h4>
+                    <div className="bg-white p-4 rounded-lg border border-purple-200">
+                      <p className="text-gray-700 leading-relaxed">
+                        {castStories[0].initialContent}
+                      </p>
+                    </div>
+                    <div className="flex items-center justify-between text-sm text-purple-600">
+                      <span>Created: {formatDateTime(new Date(castStories[0].createdAt!))}</span>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => window.open(`/story/${castStories[0].id}`, '_blank')}
+                        className="text-purple-700 border-purple-300 hover:bg-purple-50"
+                      >
+                        <ExternalLink className="w-4 h-4 mr-1" />
+                        View Story
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+            
+            {/* Stories Table */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold text-gray-900">All Cast Stories</h3>
+              <div className="overflow-x-auto">
+                <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead className="w-[40px]"></TableHead>
@@ -288,9 +323,11 @@ export function CastStoriesDashboard({ userFid }: CastStoriesDashboardProps) {
                     />
                   );
                 })}
-              </TableBody>
-            </Table>
-          </div>
+                </TableBody>
+                </Table>
+              </div>
+            </div>
+          </>
         )}
       </CardContent>
     </Card>
@@ -349,12 +386,10 @@ function StoryRow({
       }
       return failureCount < 3;
     },
-    onError: (error) => {
-      console.warn(`Failed to fetch pending comments for story ${story.id}:`, error);
-    }
+
   });
 
-  const totalPendingCount = (pendingComments.data?.storyComments.length || 0) + (pendingComments.data?.castComments.length || 0);
+  const totalPendingCount = (pendingComments.data?.storyComments?.length || 0) + (pendingComments.data?.castComments?.length || 0);
 
   return (
     <>
@@ -533,7 +568,7 @@ function StoryRow({
                   <h4 className="font-medium text-gray-900">Pending Comments & Cast Replies</h4>
                   
                   {/* Story Comments */}
-                  {pendingComments.data?.storyComments.map((comment) => (
+                  {pendingComments.data?.storyComments?.map((comment) => (
                     <div key={comment.id} className="bg-white p-3 rounded-lg border border-gray-200">
                       <div className="flex items-start justify-between">
                         <div className="flex items-start gap-3 flex-1">
@@ -579,7 +614,7 @@ function StoryRow({
                   ))}
                   
                   {/* Cast Comments */}
-                  {pendingComments.data?.castComments.map((comment) => (
+                  {pendingComments.data?.castComments?.map((comment) => (
                     <div key={comment.id} className="bg-white p-3 rounded-lg border border-gray-200">
                       <div className="flex items-start justify-between">
                         <div className="flex items-start gap-3 flex-1">

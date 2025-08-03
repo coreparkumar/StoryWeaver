@@ -1321,12 +1321,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       if (!cast) {
-        // Fallback: create a generic cast object for testing/fallback scenarios
+        // Try to get cast from the request body context
         cast = {
-          text: "Story content from cast action",
+          text: req.body.cast?.text || "A fascinating story seed from a Farcaster cast",
           author: { fid: castAuthorFid || triggerFid },
           hash: castHash,
-          parent_hash: null // Will be handled in fallback logic
+          parent_hash: req.body.cast?.parent_hash || null
         };
       }
 
