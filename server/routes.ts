@@ -22,6 +22,7 @@ import { insertStorySegmentSchema, insertStoryLikeSchema, insertUserSchema, inse
 import { z } from "zod";
 import { generalRateLimit, contributionRateLimit } from "./middleware/rate-limiter";
 import { serverNeynarClient } from "./lib/neynar";
+import { URLEncryption } from "./lib/encryption";
 
 // Helper function to create Farcaster-friendly cast text
 function createFarcasterCastText(title: string, content: string, storyId: string): string {
@@ -29,7 +30,9 @@ function createFarcasterCastText(title: string, content: string, storyId: string
     `https://${process.env.REPLIT_DEV_DOMAIN}` : 
     'https://storyweaver.replit.app';
   
-  const storyUrl = `${baseUrl}/story/${storyId}`;
+  // Encrypt the story ID for URL security
+  const encryptedStoryId = URLEncryption.encryptStoryId(storyId);
+  const storyUrl = `${baseUrl}/story/${encryptedStoryId}`;
   
   // If the full content fits in a cast (320 chars with URL), use it
   const fullText = `📖 ${title}\n\n${content}\n\n🔗 Continue the story: ${storyUrl}`;
@@ -250,11 +253,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get story with contributors
+  // Get story with contributors (supports encrypted IDs)
   app.get("/api/stories/:id", async (req, res) => {
     try {
-      const { id } = req.params;
+      let { id } = req.params;
       const viewerFid = req.query.viewerFid ? parseInt(req.query.viewerFid as string) : undefined;
+      
+      // Try to decrypt the ID if it appears to be encrypted
+      const decryptedId = URLEncryption.decryptStoryId(id);
+      if (decryptedId && decryptedId !== id) {
+        id = decryptedId;
+      }
       
       const story = await storage.getStoryWithContributors(id, viewerFid);
       if (!story) {
@@ -1207,6 +1216,75 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Check if user has Story Weaver mini app installed (for action availability)
       // Only users with the miniapp should see "Weave My Part" action
       
+      // Fetch the cast content to determine context and action
+      const cast = await serverNeynarClient.getCastByHash(castHash);
+      
+      if (!cast) {
+        return res.json({
+          type: "message",
+          message: validateActionMessage("Cast not found or unavailable")
+        });
+      }
+
+      // Check if this cast is a reply to an existing story seed cast
+      if (cast.parent_hash) {
+        console.log("Cast is a reply, checking for parent story...");
+        
+        // Look for existing story with this parent cast hash
+        const existingStory = await storage.getStoryByCastHash(cast.parent_hash);
+        
+        if (existingStory) {
+          console.log("Found parent story:", existingStory.id);
+          
+          // This is a reply to a story seed cast - save as cast comment for approval
+          try {
+            const user = await storage.getUserByFid(triggerFid);
+            if (!user) {
+              // Create user if doesn't exist
+              const neynarUser = await serverNeynarClient.getUserByFid(triggerFid);
+              if (neynarUser) {
+                await storage.createUser({
+                  fid: triggerFid,
+                  username: neynarUser.username,
+                  displayName: neynarUser.display_name,
+                  pfpUrl: neynarUser.pfp_url
+                });
+              }
+            }
+
+            // Save the reply as a cast comment for owner approval
+            await storage.addCastComment({
+              storyId: existingStory.id,
+              commentCastHash: castHash,
+              authorFid: triggerFid,
+              content: cast.text,
+              approvalStatus: "pending"
+            });
+
+            console.log("Saved cast comment for approval");
+
+            // Encrypt story ID for secure link
+            const encryptedStoryId = URLEncryption.encryptStoryId(existingStory.id);
+            const baseUrl = process.env.REPLIT_DEV_DOMAIN ? 
+              `https://${process.env.REPLIT_DEV_DOMAIN}` : 
+              'https://storyweaver.replit.app';
+
+            return res.json({
+              type: "message",
+              message: validateActionMessage("✨ Your story part submitted for review!"),
+              link: `${baseUrl}/story/${encryptedStoryId}`
+            });
+
+          } catch (error) {
+            console.error("Error saving cast comment:", error);
+            return res.json({
+              type: "message",
+              message: validateActionMessage("Error saving your contribution. Please try again.")
+            });
+          }
+        }
+      }
+
       if (triggerFid === 977521) {
         // Owner triggered - can create seed stories
         

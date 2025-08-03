@@ -98,6 +98,23 @@ These documents help stakeholders understand the technical implementation withou
 
 ### Recent Implementation Updates
 
+**August 3, 2025 - Reply Detection & URL Encryption System Complete**
+- **Cast Reply Detection**: Enhanced cast action handler to automatically detect replies to story seed casts
+  - When users reply to a story seed cast and select "Weave My Part", their contribution is saved to cast_comments table
+  - System identifies parent cast hash and links reply to the correct story for owner approval
+  - Automatic user creation for new contributors with Neynar API integration
+  - Proper approval workflow where replies appear in dashboard for owner review
+- **URL Encryption System**: Implemented comprehensive URL encryption for security
+  - Added URLEncryption utility class with encrypt/decrypt methods for story IDs
+  - All story links now use encrypted IDs for enhanced security and obfuscation
+  - Backend routes support both plain and encrypted IDs for backward compatibility
+  - Base64URL encoding provides URL-safe encrypted story links
+- **Farcaster Integration Enhancements**: 
+  - Fixed Farcaster posting for dashboard-created stories with character limit handling
+  - Story snippets automatically generated when content exceeds 320 character limit
+  - Smart truncation preserves story title and adds continuation link
+  - Encrypted story URLs in all Farcaster posts for security
+
 **August 3, 2025 - Public Story Creation & Cast Validation System Complete**
 - **Public Story Creation Interface**: Added full-featured story creation component for all authenticated Farcaster users
   - Character limits: 100 for titles, 500 for content with real-time counters
