@@ -150,6 +150,16 @@ These documents help stakeholders understand the technical implementation withou
   - Proper error handling for API limitations and network issues
   - Professional UI components for validation alerts and status indicators
 
+**August 3, 2025 - Database Cleanup Script & Error Resolution Complete**
+- Created cascading deletion script `scripts/cleanup-database.js` for proper database maintenance
+- Script performs safe deletion in dependency order: cast_comments → story_comments → story_segments → story_likes → story_locks → stories
+- Added comprehensive error handling to dashboard to prevent retries on deleted/non-existent stories
+- Resolved "Story not found" errors by improving query error handling with proper 404 responses
+- All major functionality confirmed working: delete, complete story, and pending comments endpoints
+- Database cleanup script successfully tested: deleted 6 stories with proper progress logging
+- Added script documentation in `scripts/README.md` with usage instructions and safety features
+- System now handles edge cases gracefully when stories are deleted or modified during active sessions
+
 **August 2, 2025 - Cast Stories Dashboard & Database Documentation Complete**
 - Created comprehensive "Stories from Cast Actions" tabular dashboard with professional table layout
 - Added action buttons to close, approve, and remove each story with confirmation dialogs  
