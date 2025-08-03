@@ -3,6 +3,7 @@ import { useFarcaster } from "@/hooks/use-farcaster";
 import { StoryCard } from "@/components/StoryCard";
 import { StoryCreationModal } from "@/components/StoryCreationModal";
 import { CastStoriesDashboard } from "@/components/CastStoriesDashboard";
+import { PublicStoryCreation } from "@/components/PublicStoryCreation";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -179,6 +180,13 @@ export default function Home() {
           {user && user.fid === 977521 && (
             <div className="text-center mb-6">
               <StoryCreationModal />
+            </div>
+          )}
+
+          {/* Public Story Creation for All Users */}
+          {user && user.fid !== 977521 && (
+            <div className="mb-8">
+              <PublicStoryCreation />
             </div>
           )}
         </div>

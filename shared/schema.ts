@@ -16,7 +16,7 @@
  */
 
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, timestamp, integer, boolean } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, timestamp, integer, boolean, uuid, bigint, uniqueIndex } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -199,6 +199,23 @@ export const insertPendingWeaveSchema = createInsertSchema(pendingWeaves).omit({
 
 export type PendingWeave = typeof pendingWeaves.$inferSelect;
 export type InsertPendingWeave = z.infer<typeof insertPendingWeaveSchema>;
+
+// Co-owners table for managing multiple miniapp owners
+export const miniappOwners = pgTable("miniapp_owners", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  userFid: bigint("user_fid", { mode: "number" }).notNull(),
+  role: text("role").default("owner").notNull(), // "owner", "admin"
+  addedBy: bigint("added_by", { mode: "number" }).notNull(), // FID of who added them
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertMiniappOwnerSchema = createInsertSchema(miniappOwners).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type MiniappOwner = typeof miniappOwners.$inferSelect;
+export type InsertMiniappOwner = z.infer<typeof insertMiniappOwnerSchema>;
 
 // Extended types for frontend
 export type StoryWithContributors = Story & {

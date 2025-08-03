@@ -303,12 +303,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Check if user is an owner/co-owner
+  const isOwnerOrCoOwner = (userFid: number): boolean => {
+    // Main owner
+    if (userFid === 977521) return true;
+    
+    // TODO: Add co-owner check from database when table is ready
+    // For now, only main owner has access
+    return false;
+  };
+
   // Get stories created from cast actions for dashboard
   app.get("/api/cast-stories", async (req, res) => {
     try {
       const { creatorFid } = req.query;
       
-      if (!creatorFid || parseInt(creatorFid as string) !== 977521) {
+      if (!creatorFid || !isOwnerOrCoOwner(parseInt(creatorFid as string))) {
         return res.status(403).json({ error: "Unauthorized access to cast stories" });
       }
       
@@ -326,7 +336,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { storyId } = req.params;
       const { creatorFid } = req.query;
       
-      if (!creatorFid || parseInt(creatorFid as string) !== 977521) {
+      if (!creatorFid || !isOwnerOrCoOwner(parseInt(creatorFid as string))) {
         return res.status(403).json({ error: "Unauthorized access to pending comments" });
       }
       
@@ -351,8 +361,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { commentId } = req.params;
       const { userFid } = req.body;
       
-      if (!userFid || userFid !== 977521) {
-        return res.status(403).json({ error: "Only the Story Weaver owner can approve comments" });
+      if (!userFid || !isOwnerOrCoOwner(userFid)) {
+        return res.status(403).json({ error: "Only Story Weaver owners can approve comments" });
       }
       
       const result = await storage.approveAndIncorporateComment(commentId, userFid);
@@ -373,8 +383,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { commentId } = req.params;
       const { userFid } = req.body;
       
-      if (!userFid || userFid !== 977521) {
-        return res.status(403).json({ error: "Only the Story Weaver owner can reject comments" });
+      if (!userFid || !isOwnerOrCoOwner(userFid)) {
+        return res.status(403).json({ error: "Only Story Weaver owners can reject comments" });
       }
       
       const result = await storage.declineComment(commentId);
