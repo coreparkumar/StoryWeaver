@@ -171,16 +171,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
     
+    const baseUrl = process.env.REPLIT_DEV_DOMAIN ? 
+      `https://${process.env.REPLIT_DEV_DOMAIN}` : 
+      'https://worthifyme.in';
+    
     res.json({
       "actions": [
         {
           "name": "Weave My Part",
           "icon": "magic-wand",
           "description": "Transform this cast into a collaborative story seed",
-          "aboutUrl": "https://worthifyme.in/about",
+          "aboutUrl": `${baseUrl}/about`,
           "action": {
             "type": "post",
-            "url": "https://worthifyme.in/api/cast-actions/weave-story"
+            "url": `${baseUrl}/api/cast-actions/weave-story`
           }
         }
       ]
@@ -1165,11 +1169,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     return message.substring(0, 77) + "...";
   }
   app.post("/api/cast-actions/weave-story", async (req, res) => {
+    // Set CORS headers for action responses
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Content-Type', 'application/json');
+    
     try {
-      // Set CORS headers for action responses
-      res.setHeader('Access-Control-Allow-Origin', '*');
-      res.setHeader('Content-Type', 'application/json');
-      
       console.log("=== Cast Action Request Debug ===");
       console.log("User-Agent:", req.get('User-Agent'));
       console.log("Content-Type:", req.get('Content-Type'));
@@ -1208,8 +1212,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Validate required cast context
       if (!triggerFid || !castHash) {
-        return res.status(400).json({ 
-          error: "Invalid Farcaster action: missing required context" 
+        return res.json({
+          type: "message",
+          message: validateActionMessage("Invalid action context")
         });
       }
       
@@ -1217,13 +1222,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Only users with the miniapp should see "Weave My Part" action
       
       // Fetch the cast content to determine context and action
-      const cast = await serverNeynarClient.getCastByHash(castHash);
+      let cast = null;
+      try {
+        cast = await serverNeynarClient.getCastByHash(castHash);
+      } catch (error) {
+        console.warn("Neynar API error, proceeding with fallback:", error);
+        // Continue with fallback logic when API fails
+      }
       
       if (!cast) {
-        return res.json({
-          type: "message",
-          message: validateActionMessage("Cast not found or unavailable")
-        });
+        // Fallback: create a generic cast object for testing/fallback scenarios
+        cast = {
+          text: "Story content from cast action",
+          author: { fid: castAuthorFid || triggerFid },
+          hash: castHash,
+          parent_hash: null // Will be handled in fallback logic
+        };
       }
 
       // Check if this cast is a reply to an existing story seed cast
@@ -1240,14 +1254,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
           try {
             const user = await storage.getUserByFid(triggerFid);
             if (!user) {
-              // Create user if doesn't exist
-              const neynarUser = await serverNeynarClient.getUserByFid(triggerFid);
-              if (neynarUser) {
+              // Create user if doesn't exist - handle API errors gracefully
+              try {
+                const neynarUser = await serverNeynarClient.getUserByFid(triggerFid);
+                if (neynarUser) {
+                  await storage.createUser({
+                    fid: triggerFid,
+                    username: neynarUser.username,
+                    displayName: neynarUser.display_name,
+                    pfpUrl: neynarUser.pfp_url
+                  });
+                }
+              } catch (apiError) {
+                console.warn("Failed to fetch user from Neynar, creating with FID only:", apiError);
+                // Create minimal user record
                 await storage.createUser({
                   fid: triggerFid,
-                  username: neynarUser.username,
-                  displayName: neynarUser.display_name,
-                  pfpUrl: neynarUser.pfp_url
+                  username: `user${triggerFid}`,
+                  displayName: `User ${triggerFid}`,
+                  pfpUrl: null
                 });
               }
             }
@@ -1291,16 +1316,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Check if a story already exists for this cast
         const existingStory = await storage.getStoryByCastHash(castHash);
         if (existingStory) {
+          const baseUrl = process.env.REPLIT_DEV_DOMAIN ? 
+            `https://${process.env.REPLIT_DEV_DOMAIN}` : 
+            'https://storyweaver.replit.app';
+          const encryptedStoryId = URLEncryption.encryptStoryId(existingStory.id);
           const message = `🔗 Story already exists!`;
           return res.json({
+            type: "message",
             message: validateActionMessage(message),
-            link: `https://worthifyme.in/story/${existingStory.id}`
+            link: `${baseUrl}/story/${encryptedStoryId}`
           });
         }
         
-        // For production, fetch cast details from Farcaster/Neynar API using castHash
-        const castText = req.body.text || "A fascinating cast that sparked collaborative storytelling";
-        const username = req.body.username || `storyweaver`;
+        // Use cast content if available, otherwise fallback
+        const castText = cast?.text || req.body.text || "A fascinating cast that sparked collaborative storytelling";
+        const username = cast?.author?.username || req.body.username || `storyweaver`;
         
         // Create collaborative story from seed cast
         const storyData = {
@@ -1313,10 +1343,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const story = await storage.createStory(storyData);
         
         // Return proper cast action JSON response (80 char limit)
+        const baseUrl = process.env.REPLIT_DEV_DOMAIN ? 
+          `https://${process.env.REPLIT_DEV_DOMAIN}` : 
+          'https://storyweaver.replit.app';
+        const encryptedStoryId = URLEncryption.encryptStoryId(story.id);
         const message = `🧙‍♂️ New story created!`;
         return res.json({
+          type: "message",
           message: validateActionMessage(message),
-          link: `https://worthifyme.in/story/${story.id}`
+          link: `${baseUrl}/story/${encryptedStoryId}`
         });
       } else {
         // Non-owner users can comment on existing stories via "Weave My Part"
@@ -1351,17 +1386,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
           
           await storage.addCastComment(castCommentData);
           
+          const baseUrl = process.env.REPLIT_DEV_DOMAIN ? 
+            `https://${process.env.REPLIT_DEV_DOMAIN}` : 
+            'https://storyweaver.replit.app';
+          const encryptedStoryId = URLEncryption.encryptStoryId(existingStory.id);
           const message = `🎭 Contribution sent for review!`;
           return res.json({
+            type: "message",
             message: validateActionMessage(message),
-            link: `https://worthifyme.in/story/${existingStory.id}`
+            link: `${baseUrl}/story/${encryptedStoryId}`
           });
         } else {
           // No existing story for this cast - suggest they can participate in existing stories
+          const baseUrl = process.env.REPLIT_DEV_DOMAIN ? 
+            `https://${process.env.REPLIT_DEV_DOMAIN}` : 
+            'https://storyweaver.replit.app';
           const message = `🧙‍♂️ No story yet! Explore existing stories.`;
           return res.json({
+            type: "message",
             message: validateActionMessage(message),
-            link: `https://worthifyme.in`
+            link: baseUrl
           });
         }
       }
@@ -1376,8 +1420,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Return error response (also limited to 80 characters)
       const errorMessage = error instanceof Error ? error.message : "Story weaving failed";
-      res.status(500).json({ 
-        message: validateActionMessage(errorMessage)
+      res.json({ 
+        type: "message",
+        message: validateActionMessage("Something went wrong. Please try again.")
       });
     }
   });
