@@ -265,10 +265,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let { id } = req.params;
       const viewerFid = req.query.viewerFid ? parseInt(req.query.viewerFid as string) : undefined;
       
-      // Try to decrypt the ID if it appears to be encrypted
-      const decryptedId = URLEncryption.decryptStoryId(id);
-      if (decryptedId && decryptedId !== id) {
-        id = decryptedId;
+      // Check if ID looks like a UUID (plain ID) or encrypted
+      const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+      
+      if (!isUUID) {
+        // Try to decrypt the ID if it doesn't look like a plain UUID
+        try {
+          const decryptedId = URLEncryption.decryptStoryId(id);
+          if (decryptedId && decryptedId !== id) {
+            id = decryptedId;
+          }
+        } catch (error) {
+          return res.status(400).json({ error: "Invalid story ID format" });
+        }
       }
       
       const story = await storage.getStoryWithContributors(id, viewerFid);
