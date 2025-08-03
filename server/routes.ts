@@ -1240,7 +1240,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         };
       }
 
-      // Check if this cast is a reply to an existing story seed cast
+      // Check if this cast is a reply to an existing story seed cast (including own replies)
       if (cast.parent_hash) {
         console.log("Cast is a reply, checking for parent story...");
         
@@ -1296,7 +1296,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
             return res.json({
               type: "message",
-              message: validateActionMessage("✨ Your story part submitted for review!"),
+              message: validateActionMessage("📖 Story Part Added"),
               link: `${baseUrl}/story/${encryptedStoryId}`
             });
 
@@ -1390,7 +1390,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             `https://${process.env.REPLIT_DEV_DOMAIN}` : 
             'https://storyweaver.replit.app';
           const encryptedStoryId = URLEncryption.encryptStoryId(existingStory.id);
-          const message = `🎭 Contribution sent for review!`;
+          const message = `📖 Story Part Added`;
           return res.json({
             type: "message",
             message: validateActionMessage(message),

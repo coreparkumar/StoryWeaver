@@ -863,9 +863,19 @@ export class DatabaseStorage implements IStorage {
   }
 
   private generateCastSummary(title: string, content: string): string {
-    // Create a meaningful summary from the story content
-    const summary = content.length > 60 ? content.substring(0, 60) + "..." : content;
-    return `"${title}" - ${summary}`;
+    // Extract the original cast content from the formatted story content
+    // Look for content between "🌱 Story Seed:" and the next emoji or end
+    const seedMatch = content.match(/🌱 Story Seed:\s*\n*\s*"([^"]+)"/);
+    if (seedMatch && seedMatch[1]) {
+      const originalCast = seedMatch[1];
+      const summary = originalCast.length > 60 ? originalCast.substring(0, 60) + "..." : originalCast;
+      return summary;
+    }
+    
+    // Fallback: create summary from first line of content
+    const firstLine = content.split('\n')[0];
+    const summary = firstLine.length > 60 ? firstLine.substring(0, 60) + "..." : firstLine;
+    return summary;
   }
 
   // Get pending comments/cast replies for a story
