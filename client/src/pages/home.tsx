@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useFarcaster } from "@/hooks/use-farcaster";
 import { StoryCard } from "@/components/StoryCard";
@@ -7,13 +8,16 @@ import { PublicStoryCreation } from "@/components/PublicStoryCreation";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Sparkles, Users, MessageSquare, Plus, ArrowRight } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import { Loader2, Sparkles, Users, MessageSquare, Plus, ArrowRight, Eye, Settings } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import type { StoryWithContributors } from "@shared/schema";
 import promoImage from "../assets/story-weaver-promo.jpg";
 
 export default function Home() {
   const { user, isLoading: fcLoading } = useFarcaster();
+  const [viewAsNormalUser, setViewAsNormalUser] = useState(false);
   
   // Check for cast share parameters
   const urlParams = new URLSearchParams(window.location.search);
@@ -89,20 +93,39 @@ export default function Home() {
               </div>
             </div>
             
-            {/* User Profile */}
-            {user && (
-              <div className="flex items-center space-x-2">
-                <img 
-                  src={user.pfpUrl || "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&h=150"} 
-                  alt="User Avatar" 
-                  className="w-8 h-8 rounded-full border-2 border-fc-purple"
-                />
-                <div className="text-right">
-                  <p className="text-sm font-medium text-gray-900">{user.displayName}</p>
-                  <p className="text-xs text-gray-500">@{user.username}</p>
+            {/* View Toggle & User Profile */}
+            <div className="flex items-center space-x-4">
+              {/* View Toggle for Owner */}
+              {user && user.fid === 977521 && (
+                <div className="flex items-center space-x-2">
+                  <Settings className="w-4 h-4 text-gray-500" />
+                  <Switch
+                    id="view-mode"
+                    checked={viewAsNormalUser}
+                    onCheckedChange={setViewAsNormalUser}
+                  />
+                  <Label htmlFor="view-mode" className="text-sm text-gray-600">
+                    {viewAsNormalUser ? "Normal View" : "Admin View"}
+                  </Label>
+                  <Eye className="w-4 h-4 text-gray-500" />
                 </div>
-              </div>
-            )}
+              )}
+
+              {/* User Profile */}
+              {user && (
+                <div className="flex items-center space-x-2">
+                  <img 
+                    src={user.pfpUrl || "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&h=150"} 
+                    alt="User Avatar" 
+                    className="w-8 h-8 rounded-full border-2 border-fc-purple"
+                  />
+                  <div className="text-right">
+                    <p className="text-sm font-medium text-gray-900">{user.displayName}</p>
+                    <p className="text-xs text-gray-500">@{user.username}</p>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </header>
@@ -176,15 +199,15 @@ export default function Home() {
             </Card>
           </div>
 
-          {/* Create Story Section */}
-          {user && user.fid === 977521 && (
+          {/* Create Story Section - Admin View Only */}
+          {user && user.fid === 977521 && !viewAsNormalUser && (
             <div className="text-center mb-6">
               <StoryCreationModal />
             </div>
           )}
 
-          {/* Public Story Creation for All Users */}
-          {user && user.fid !== 977521 && (
+          {/* Public Story Creation - For Normal Users OR when Owner toggles to Normal View */}
+          {user && (user.fid !== 977521 || (user.fid === 977521 && viewAsNormalUser)) && (
             <div className="mb-8">
               <PublicStoryCreation />
             </div>
@@ -224,9 +247,14 @@ export default function Home() {
               <div className="text-center">
                 <h2 className="text-lg font-semibold text-gray-900">No Stories Available Yet</h2>
                 <p className="text-sm text-gray-600 mt-2">Be the first to create a collaborative story!</p>
-                {user && user.fid === 977521 && (
+                {user && user.fid === 977521 && !viewAsNormalUser && (
                   <div className="mt-4">
                     <StoryCreationModal />
+                  </div>
+                )}
+                {user && (user.fid !== 977521 || (user.fid === 977521 && viewAsNormalUser)) && (
+                  <div className="mt-4">
+                    <PublicStoryCreation />
                   </div>
                 )}
               </div>
@@ -234,8 +262,8 @@ export default function Home() {
           </Card>
         )}
 
-        {/* Cast Stories Dashboard for Owner */}
-        {user && user.fid === 977521 && (
+        {/* Cast Stories Dashboard for Owner - Admin View Only */}
+        {user && user.fid === 977521 && !viewAsNormalUser && (
           <div className="mt-8">
             <CastStoriesDashboard userFid={user.fid} />
           </div>
