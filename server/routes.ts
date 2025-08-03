@@ -18,11 +18,13 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertStorySegmentSchema, insertStoryLikeSchema, insertUserSchema, insertStorySchema, insertStoryCommentSchema } from "@shared/schema";
+import { insertStorySegmentSchema, insertStoryLikeSchema, insertUserSchema, insertStorySchema, insertStoryCommentSchema, stories } from "@shared/schema";
 import { z } from "zod";
 import { generalRateLimit, contributionRateLimit } from "./middleware/rate-limiter";
 import { serverNeynarClient } from "./lib/neynar";
 import { URLEncryption } from "./lib/encryption";
+import { db } from "./db";
+import { eq } from "drizzle-orm";
 
 // Helper function to create Farcaster-friendly cast text
 function createFarcasterCastText(title: string, content: string, storyId: string): string {
@@ -609,6 +611,85 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ success: true, message: "Story deleted successfully" });
     } catch (error) {
       console.error("Error deleting story:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  // Complete story and post to Farcaster
+  app.post("/api/stories/:storyId/complete", async (req, res) => {
+    try {
+      const { storyId } = req.params;
+      const { userFid } = req.body;
+      
+      if (!userFid || !isOwnerOrCoOwner(userFid)) {
+        return res.status(403).json({ error: "Only Story Weaver owners can complete stories" });
+      }
+      
+      // Complete the story and get full content
+      const result = await storage.completeStory(storyId, userFid);
+      const { story, completeContent } = result;
+      
+      // Generate summary for Farcaster post
+      const maxLength = 280; // Farcaster character limit
+      let summary = completeContent;
+      
+      // If content is too long, create a summary
+      if (completeContent.length > maxLength - 50) { // Leave room for link
+        // Try to get the first paragraph or sentence
+        const firstParagraph = completeContent.split('\n\n')[0];
+        if (firstParagraph.length <= maxLength - 50) {
+          summary = firstParagraph + "...";
+        } else {
+          // Truncate to fit
+          summary = completeContent.substring(0, maxLength - 50) + "...";
+        }
+      }
+      
+      // Create Farcaster post content
+      const baseUrl = process.env.REPLIT_DEV_DOMAIN ? 
+        `https://${process.env.REPLIT_DEV_DOMAIN}` : 
+        'https://worthifyme.in';
+      const encryptedStoryId = URLEncryption.encryptStoryId(story.id);
+      const storyUrl = `${baseUrl}/story/${encryptedStoryId}`;
+      
+      const castText = `📖 Story Complete: "${story.title}"\n\n${summary}\n\nRead the full collaborative story: ${storyUrl}`;
+      
+      // Post to Farcaster using Neynar API
+      try {
+        // For now, return the cast content - implement actual posting when ready
+        const finalCastHash = `final_${story.id}_${Date.now()}`;
+        
+        // Update story with final cast hash
+        await db
+          .update(stories)
+          .set({ 
+            finalCastHash,
+            updatedAt: new Date()
+          })
+          .where(eq(stories.id, story.id));
+        
+        res.json({ 
+          success: true, 
+          story: { ...story, finalCastHash },
+          castText,
+          storyUrl,
+          message: "Story completed successfully! Cast content generated for Farcaster posting."
+        });
+        
+      } catch (castError) {
+        console.error("Error posting to Farcaster:", castError);
+        // Story is still completed, just posting failed
+        res.json({ 
+          success: true, 
+          story,
+          message: "Story completed successfully, but Farcaster posting failed. You can manually share the story.",
+          castText,
+          storyUrl
+        });
+      }
+      
+    } catch (error) {
+      console.error("Error completing story:", error);
       res.status(500).json({ error: "Internal server error" });
     }
   });

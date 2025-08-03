@@ -34,6 +34,7 @@ export const stories = pgTable("stories", {
   creatorFid: integer("creator_fid").notNull(),
   title: text("title").notNull(),
   initialContent: text("initial_content").notNull(),
+  completeContent: text("complete_content"), // Seed story + all approved replies combined
   finalContent: text("final_content"), // Final story after closure
   originalCastHash: text("original_cast_hash"), // Hash of the original Farcaster cast that started the story
   latestWeaveCastHash: text("latest_weave_cast_hash"), // Hash of the most recent weave cast

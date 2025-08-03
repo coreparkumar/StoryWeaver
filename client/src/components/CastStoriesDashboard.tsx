@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { CheckCircle, XCircle, Trash2, ExternalLink, StopCircle, Activity, Calendar, Hash, MessageSquare, ChevronDown, ChevronRight, User } from "lucide-react";
+import { CheckCircle, XCircle, Trash2, ExternalLink, StopCircle, Activity, Calendar, Hash, MessageSquare, ChevronDown, ChevronRight, User, CheckSquare } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { useFarcaster } from "@/hooks/use-farcaster";
 import { CastValidationAlert } from "@/components/CastValidationAlert";
@@ -93,6 +93,33 @@ export function CastStoriesDashboard({ userFid }: CastStoriesDashboardProps) {
       toast({
         title: "Error",
         description: error.message || "Failed to delete story",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const completeStoryMutation = useMutation({
+    mutationFn: async (storyId: string) => {
+      const response = await apiRequest('POST', `/api/stories/${storyId}/complete`, { userFid });
+      return response.json();
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/cast-stories'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/stories'] });
+      toast({
+        title: "Story Completed",
+        description: data.message || "Story has been completed and ready for Farcaster posting.",
+      });
+      
+      // Show the cast content to user for manual posting if needed
+      if (data.castText) {
+        console.log("Generated cast content:", data.castText);
+      }
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to complete story",
         variant: "destructive",
       });
     },
@@ -248,10 +275,12 @@ export function CastStoriesDashboard({ userFid }: CastStoriesDashboardProps) {
                       onToggleExpand={() => toggleRowExpansion(story.id)}
                       onCloseStory={(storyId) => closeStoryMutation.mutate(storyId)}
                       onDeleteStory={(storyId) => deleteStoryMutation.mutate(storyId)}
+                      onCompleteStory={(storyId) => completeStoryMutation.mutate(storyId)}
                       onApproveComment={(commentId, type) => approveCommentMutation.mutate({ commentId, type })}
                       onRejectComment={(commentId, type) => rejectCommentMutation.mutate({ commentId, type })}
                       closeStoryPending={closeStoryMutation.isPending}
                       deleteStoryPending={deleteStoryMutation.isPending}
+                      completeStoryPending={completeStoryMutation.isPending}
                       approvePending={approveCommentMutation.isPending}
                       rejectPending={rejectCommentMutation.isPending}
                       getPendingCommentsData={getPendingCommentsData}
@@ -277,10 +306,12 @@ interface StoryRowProps {
   onToggleExpand: () => void;
   onCloseStory: (storyId: string) => void;
   onDeleteStory: (storyId: string) => void;
+  onCompleteStory: (storyId: string) => void;
   onApproveComment: (commentId: string, type: 'story' | 'cast') => void;
   onRejectComment: (commentId: string, type: 'story' | 'cast') => void;
   closeStoryPending: boolean;
   deleteStoryPending: boolean;
+  completeStoryPending: boolean;
   approvePending: boolean;
   rejectPending: boolean;
   getPendingCommentsData: (storyId: string) => Promise<PendingCommentsData>;
@@ -295,10 +326,12 @@ function StoryRow({
   onToggleExpand,
   onCloseStory,
   onDeleteStory,
+  onCompleteStory,
   onApproveComment,
   onRejectComment,
   closeStoryPending,
   deleteStoryPending,
+  completeStoryPending,
   approvePending,
   rejectPending,
   getPendingCommentsData,
@@ -403,6 +436,39 @@ function StoryRow({
                       className="bg-orange-600 hover:bg-orange-700"
                     >
                       {closeStoryPending ? "Closing..." : "Close Story"}
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            )}
+
+            {story.sessionStatus === "active" && (
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="h-7 text-blue-700 border-blue-300 hover:bg-blue-50"
+                  >
+                    <CheckSquare className="w-3 h-3" />
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Complete Story</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      This will mark the story as complete, combine all approved content, and prepare it for sharing on Farcaster. 
+                      The story will be closed to new contributions.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={() => onCompleteStory(story.id)}
+                      disabled={completeStoryPending}
+                      className="bg-blue-600 hover:bg-blue-700"
+                    >
+                      {completeStoryPending ? "Completing..." : "Complete Story"}
                     </AlertDialogAction>
                   </AlertDialogFooter>
                 </AlertDialogContent>

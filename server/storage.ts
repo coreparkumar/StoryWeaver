@@ -102,6 +102,10 @@ export interface IStorage {
   deleteStory(storyId: string): Promise<boolean>;
   getStoryPendingComments(storyId: string): Promise<(StoryComment & { author: User })[]>;
   getCastCommentsByStoryId(storyId: string): Promise<(CastComment & { author: User })[]>;
+  
+  // Story completion operations
+  buildCompleteStoryContent(storyId: string): Promise<string>;
+  completeStory(storyId: string, completedByFid: number): Promise<{ story: Story; completeContent: string }>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -968,6 +972,63 @@ export class DatabaseStorage implements IStorage {
       console.error("Error deleting story:", error);
       return false;
     }
+  }
+
+  // Build complete story content from seed + approved segments
+  async buildCompleteStoryContent(storyId: string): Promise<string> {
+    const story = await this.getStory(storyId);
+    if (!story) {
+      throw new Error("Story not found");
+    }
+
+    // Get all approved segments in order
+    const segments = await db
+      .select({
+        content: storySegments.content,
+        orderIndex: storySegments.orderIndex
+      })
+      .from(storySegments)
+      .where(eq(storySegments.storyId, storyId))
+      .orderBy(storySegments.orderIndex);
+
+    // Start with initial content (seed story)
+    let completeContent = story.initialContent;
+
+    // Append all approved segments
+    for (const segment of segments) {
+      completeContent += "\n\n" + segment.content;
+    }
+
+    return completeContent;
+  }
+
+  // Complete story and prepare final version
+  async completeStory(storyId: string, completedByFid: number): Promise<{ story: Story; completeContent: string }> {
+    // Build complete content
+    const completeContent = await this.buildCompleteStoryContent(storyId);
+
+    // Update story status and content
+    const [updatedStory] = await db
+      .update(stories)
+      .set({
+        sessionStatus: "closed",
+        closedBy: "manual",
+        endedAt: new Date(),
+        completeContent: completeContent,
+        finalContent: completeContent, // Copy to final content as well
+        updatedAt: new Date()
+      })
+      .where(eq(stories.id, storyId))
+      .returning();
+
+    if (!updatedStory) {
+      throw new Error("Failed to update story");
+    }
+
+    return {
+      story: updatedStory,
+      completeContent
+    };
   }
 }
 
