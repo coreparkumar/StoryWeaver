@@ -21,6 +21,7 @@ import { storage } from "./storage";
 import { insertStorySegmentSchema, insertStoryLikeSchema, insertUserSchema, insertStorySchema, insertStoryCommentSchema } from "@shared/schema";
 import { z } from "zod";
 import { generalRateLimit, contributionRateLimit } from "./middleware/rate-limiter";
+import { serverNeynarClient } from "./lib/neynar";
 import path from "path";
 import fs from "fs";
 
@@ -193,6 +194,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Validate cast status endpoint
+  app.get("/api/validate-cast/:hash", async (req, res) => {
+    try {
+      const { hash } = req.params;
+      
+      if (!hash) {
+        return res.status(400).json({ error: "Cast hash required" });
+      }
+      
+      const castExists = await serverNeynarClient.verifyCastExists(hash);
+      const cast = castExists ? await serverNeynarClient.getCastByHash(hash) : null;
+      
+      res.json({
+        exists: castExists,
+        status: castExists ? "active" : "deleted",
+        message: castExists 
+          ? "Cast is active and accessible" 
+          : "Cast has been deleted or is no longer accessible",
+        cast: cast || null
+      });
+    } catch (error) {
+      console.error("Error validating cast:", error);
+      res.status(500).json({ 
+        error: "Cast validation failed",
+        exists: false,
+        status: "error",
+        message: "Unable to verify cast status due to API error"
+      });
+    }
+  });
+
   // Get story with contributors
   app.get("/api/stories/:id", async (req, res) => {
     try {
@@ -202,6 +234,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const story = await storage.getStoryWithContributors(id, viewerFid);
       if (!story) {
         return res.status(404).json({ error: "Story not found" });
+      }
+
+      // Add cast validation for stories with original cast hash
+      if (story.originalCastHash) {
+        try {
+          const castExists = await serverNeynarClient.verifyCastExists(story.originalCastHash);
+          story.castStatus = {
+            exists: castExists,
+            status: castExists ? "active" : "deleted",
+            message: castExists 
+              ? "Original cast is active" 
+              : "⚠️ Warning: The original seed cast has been deleted from Farcaster"
+          };
+        } catch (error) {
+          story.castStatus = {
+            exists: false,
+            status: "error",
+            message: "Unable to verify original cast status"
+          };
+        }
       }
       
       res.json(story);
@@ -323,7 +375,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       const castStories = await storage.getCastStories();
-      res.json(castStories);
+      
+      // Verify original casts still exist and add validation status
+      const validatedStories = await Promise.all(
+        castStories.map(async (story) => {
+          let castStatus = "exists";
+          let castValidationMessage = "";
+          
+          if (story.originalCastHash) {
+            try {
+              const castExists = await serverNeynarClient.verifyCastExists(story.originalCastHash);
+              if (!castExists) {
+                castStatus = "deleted";
+                castValidationMessage = "⚠️ Original seed cast has been deleted from Farcaster";
+              }
+            } catch (error) {
+              castStatus = "error";
+              castValidationMessage = "❌ Unable to verify cast status";
+              console.warn(`Error verifying cast ${story.originalCastHash}:`, error);
+            }
+          } else {
+            castStatus = "no_cast";
+            castValidationMessage = "📝 Created directly (not from cast action)";
+          }
+          
+          return {
+            ...story,
+            castStatus,
+            castValidationMessage
+          };
+        })
+      );
+      
+      res.json(validatedStories);
     } catch (error) {
       console.error("Error fetching cast stories:", error);
       res.status(500).json({ error: "Internal server error" });

@@ -2,6 +2,7 @@ import { useParams } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { useFarcaster } from "@/hooks/use-farcaster";
 import { StoryCard } from "@/components/StoryCard";
+import { CastValidationAlert } from "@/components/CastValidationAlert";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Loader2, ArrowLeft, ExternalLink } from "lucide-react";

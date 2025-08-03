@@ -224,4 +224,9 @@ export type StoryWithContributors = Story & {
   contributors: User[];
   hasLiked: boolean;
   comments: (StoryComment & { author: User })[];
+  castStatus?: {
+    exists: boolean;
+    status: "active" | "deleted" | "error";
+    message: string;
+  };
 };

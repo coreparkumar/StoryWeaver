@@ -1,5 +1,5 @@
-// Neynar API client for Farcaster interactions
-const NEYNAR_API_KEY = import.meta.env.VITE_NEYNAR_API_KEY || "NEYNAR_API_DOCS";
+// Server-side Neynar API client for Farcaster interactions
+const NEYNAR_API_KEY = process.env.NEYNAR_API_KEY || "NEYNAR_API_DOCS";
 const NEYNAR_BASE_URL = "https://api.neynar.com/v2";
 
 export interface NeynarUser {
@@ -8,13 +8,6 @@ export interface NeynarUser {
   display_name: string;
   pfp_url?: string;
   follower_count: number;
-}
-
-export interface NeynarReaction {
-  type: "like" | "recast";
-  hash: string;
-  reactor: NeynarUser;
-  timestamp: string;
 }
 
 export interface NeynarCast {
@@ -35,7 +28,7 @@ export interface NeynarCast {
   mentioned_profiles: NeynarUser[];
 }
 
-export class NeynarClient {
+export class ServerNeynarClient {
   private apiKey: string;
 
   constructor(apiKey: string = NEYNAR_API_KEY) {
@@ -61,38 +54,6 @@ export class NeynarClient {
     return response.json();
   }
 
-  async getUserByFid(fid: number): Promise<NeynarUser> {
-    const data = await this.makeRequest(`/farcaster/user/bulk?fids=${fid}`);
-    return data.users[0];
-  }
-
-  async getCastReactions(hash: string): Promise<NeynarReaction[]> {
-    const data = await this.makeRequest(`/farcaster/reaction/cast?hash=${hash}&types=likes,recasts`);
-    return data.reactions;
-  }
-
-  async publishReaction(signerUuid: string, reactionType: "like" | "recast", target: string) {
-    return this.makeRequest("/farcaster/reaction", {
-      method: "POST",
-      body: JSON.stringify({
-        signer_uuid: signerUuid,
-        reaction_type: reactionType,
-        target,
-      }),
-    });
-  }
-
-  async deleteReaction(signerUuid: string, reactionType: "like" | "recast", target: string) {
-    return this.makeRequest("/farcaster/reaction", {
-      method: "DELETE",
-      body: JSON.stringify({
-        signer_uuid: signerUuid,
-        reaction_type: reactionType,
-        target,
-      }),
-    });
-  }
-
   async getCastByHash(hash: string): Promise<NeynarCast | null> {
     try {
       const data = await this.makeRequest(`/farcaster/cast?identifier=${hash}&type=hash`);
@@ -115,6 +76,16 @@ export class NeynarClient {
       return false;
     }
   }
+
+  async getUserByFid(fid: number): Promise<NeynarUser | null> {
+    try {
+      const data = await this.makeRequest(`/farcaster/user/bulk?fids=${fid}`);
+      return data.users[0] || null;
+    } catch (error) {
+      console.warn(`Error fetching user ${fid}:`, error);
+      return null;
+    }
+  }
 }
 
-export const neynarClient = new NeynarClient();
+export const serverNeynarClient = new ServerNeynarClient();

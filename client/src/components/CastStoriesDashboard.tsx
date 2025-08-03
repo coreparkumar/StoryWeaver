@@ -8,6 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { CheckCircle, XCircle, Trash2, ExternalLink, StopCircle, Activity, Calendar, Hash, MessageSquare, ChevronDown, ChevronRight, User } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { useFarcaster } from "@/hooks/use-farcaster";
+import { CastValidationAlert } from "@/components/CastValidationAlert";
 import { useToast } from "@/hooks/use-toast";
 import type { Story, StoryComment, CastComment, User as UserType } from "@shared/schema";
 
@@ -19,6 +20,8 @@ type CastStoryWithMeta = Story & {
   commentCount: number; 
   createdFromCast: boolean;
   castSummary: string;
+  castStatus?: string;
+  castValidationMessage?: string;
 };
 
 type PendingComment = StoryComment & { author: UserType };
