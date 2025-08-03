@@ -44,7 +44,8 @@ export function CastStoriesDashboard({ userFid }: CastStoriesDashboardProps) {
   }
 
   const { data: castStories = [], isLoading } = useQuery<CastStoryWithMeta[]>({
-    queryKey: ['/api/cast-stories', `creatorFid=${userFid}`],
+    queryKey: ['/api/cast-stories', userFid],
+    queryFn: () => fetch(`/api/cast-stories?creatorFid=${userFid}`).then(res => res.json()),
     enabled: !!user,
     refetchInterval: 10000, // Refresh every 10 seconds
   });

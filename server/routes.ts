@@ -22,6 +22,31 @@ import { insertStorySegmentSchema, insertStoryLikeSchema, insertUserSchema, inse
 import { z } from "zod";
 import { generalRateLimit, contributionRateLimit } from "./middleware/rate-limiter";
 import { serverNeynarClient } from "./lib/neynar";
+
+// Helper function to create Farcaster-friendly cast text
+function createFarcasterCastText(title: string, content: string, storyId: string): string {
+  const baseUrl = process.env.REPLIT_DEV_DOMAIN ? 
+    `https://${process.env.REPLIT_DEV_DOMAIN}` : 
+    'https://storyweaver.replit.app';
+  
+  const storyUrl = `${baseUrl}/story/${storyId}`;
+  
+  // If the full content fits in a cast (320 chars with URL), use it
+  const fullText = `📖 ${title}\n\n${content}\n\n🔗 Continue the story: ${storyUrl}`;
+  
+  if (fullText.length <= 320) {
+    return fullText;
+  }
+  
+  // Otherwise, create a snippet
+  const availableChars = 320 - `📖 ${title}\n\n...\n\n🔗 Continue the story: ${storyUrl}`.length;
+  const truncatedContent = content.length > availableChars ? 
+    content.substring(0, availableChars - 3) + '...' : 
+    content;
+  
+  return `📖 ${title}\n\n${truncatedContent}...\n\n🔗 Continue the story: ${storyUrl}`;
+}
+
 import path from "path";
 import fs from "fs";
 
@@ -302,6 +327,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const storyData = insertStorySchema.parse(req.body);
       const story = await storage.createStory(storyData);
+      
+      // Post to Farcaster when story is created from dashboard
+      try {
+        const { title, initialContent } = storyData;
+        
+        // Create a snippet version for Farcaster due to character limits
+        const castText = createFarcasterCastText(title, initialContent, story.id);
+        
+        const castResult = await serverNeynarClient.publishCast(castText);
+        
+        if (castResult.success) {
+          console.log('Story posted to Farcaster successfully:', castResult.cast?.hash);
+          
+          // Update the story with the cast hash if we get one back
+          // Note: For simulated casts, we skip updating the hash
+          if (castResult.cast?.hash && !castResult.cast.hash.startsWith('simulated_')) {
+            await storage.updateStorySharedCast(story.id, creatorFid, castResult.cast.hash);
+            console.log('Updated story with cast hash:', castResult.cast.hash);
+          }
+        } else {
+          console.warn('Failed to post story to Farcaster:', castResult.error);
+        }
+      } catch (error) {
+        console.error('Error posting to Farcaster:', error);
+        // Don't fail the story creation if Farcaster posting fails
+      }
       
       res.json(story);
     } catch (error) {

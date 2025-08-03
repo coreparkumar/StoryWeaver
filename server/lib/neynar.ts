@@ -86,6 +86,49 @@ export class ServerNeynarClient {
       return null;
     }
   }
+
+  async publishCast(text: string, signerUuid?: string): Promise<{ success: boolean; cast?: any; error?: string }> {
+    try {
+      // For now, we'll use a simple approach without signer
+      // In production, you'd need to set up a signer for the Story Weaver account
+      
+      const requestBody = {
+        text: text,
+        // If you have a signer UUID, add it here:
+        // signer_uuid: signerUuid
+      };
+
+      console.log('Publishing cast:', text);
+      
+      // Note: This would require a signer to be set up for the Story Weaver account
+      // For now, we'll simulate the posting and return a success response
+      
+      // Uncomment this when you have a signer set up:
+      // const data = await this.makeRequest('/farcaster/cast', {
+      //   method: 'POST',
+      //   body: JSON.stringify(requestBody)
+      // });
+      
+      // return { success: true, cast: data.cast };
+      
+      // Temporary simulation - remove when real posting is enabled
+      console.log('Cast would be published:', text);
+      return { 
+        success: true, 
+        cast: { 
+          hash: `simulated_${Date.now()}`,
+          text: text 
+        }
+      };
+      
+    } catch (error) {
+      console.error('Error publishing cast:', error);
+      return { 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Unknown error' 
+      };
+    }
+  }
 }
 
 export const serverNeynarClient = new ServerNeynarClient();
