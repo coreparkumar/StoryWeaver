@@ -121,7 +121,7 @@ export default function Home() {
                   />
                   <div className="text-right">
                     <p className="text-sm font-medium text-gray-900">{user.displayName}</p>
-                    <p className="text-xs text-gray-500">@{user.username}</p>
+                    <p className="text-xs text-gray-500">@{user.username || "worthify"}</p>
                   </div>
                 </div>
               )}

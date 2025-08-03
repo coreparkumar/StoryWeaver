@@ -64,7 +64,7 @@ export default function ContributorsList({ contributors }: ContributorsListProps
                     </Badge>
                   )}
                 </div>
-                <p className="text-xs text-gray-500">@{contributor.username}</p>
+                <p className="text-xs text-gray-500">@{contributor.username || "worthify"}</p>
               </div>
               <div className={cn(
                 "text-xs font-medium",

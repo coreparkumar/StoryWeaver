@@ -94,7 +94,7 @@ export function StoryCard({ story, currentUser }: StoryCardProps) {
                 <div className="flex items-center space-x-2 text-sm text-gray-500">
                   <span>by {story.creator.displayName}</span>
                   <span>•</span>
-                  <span>@{story.creator.username}</span>
+                  <span>@{story.creator.username || "worthify"}</span>
                   <span>•</span>
                   <span>{new Date(story.createdAt!).toLocaleDateString()}</span>
                 </div>

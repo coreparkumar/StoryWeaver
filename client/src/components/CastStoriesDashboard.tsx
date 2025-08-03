@@ -469,7 +469,7 @@ function StoryRow({
                           <div className="flex-1">
                             <div className="flex items-center gap-2 mb-1">
                               <span className="font-medium text-sm">{comment.author?.displayName || "Anonymous"}</span>
-                              <span className="text-xs text-gray-500">@{comment.author?.username}</span>
+                              <span className="text-xs text-gray-500">@{comment.author?.username || "worthify"}</span>
                               <Badge variant="outline" className="text-xs">Story Comment</Badge>
                             </div>
                             <p className="text-sm text-gray-700">{comment.content}</p>
@@ -515,7 +515,7 @@ function StoryRow({
                           <div className="flex-1">
                             <div className="flex items-center gap-2 mb-1">
                               <span className="font-medium text-sm">{comment.author?.displayName || "Anonymous"}</span>
-                              <span className="text-xs text-gray-500">@{comment.author?.username}</span>
+                              <span className="text-xs text-gray-500">@{comment.author?.username || "worthify"}</span>
                               <Badge variant="outline" className="text-xs bg-purple-50 text-purple-700 border-purple-200">Cast Reply</Badge>
                             </div>
                             <p className="text-sm text-gray-700">{comment.content}</p>

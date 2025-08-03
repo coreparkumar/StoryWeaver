@@ -117,7 +117,7 @@ export default function CommentsSection({ storyId, comments, currentUser, isCrea
                     <div>
                       <div className="flex items-center space-x-2">
                         <h4 className="font-medium text-gray-900">{comment.author.displayName}</h4>
-                        <span className="text-gray-500 text-sm">@{comment.author.username}</span>
+                        <span className="text-gray-500 text-sm">@{comment.author.username || "worthify"}</span>
                       </div>
                       <time className="text-gray-500 text-xs">
                         {formatTimeAgo(comment.createdAt)}
@@ -171,7 +171,7 @@ export default function CommentsSection({ storyId, comments, currentUser, isCrea
                     <div>
                       <div className="flex items-center space-x-2">
                         <h4 className="font-medium text-gray-900">{comment.author.displayName}</h4>
-                        <span className="text-gray-500 text-sm">@{comment.author.username}</span>
+                        <span className="text-gray-500 text-sm">@{comment.author.username || "worthify"}</span>
                         <Badge variant="outline" className="text-green-600 border-green-600">
                           Incorporated
                         </Badge>
